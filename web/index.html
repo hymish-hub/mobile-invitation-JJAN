@@ -288,14 +288,30 @@ body.mode-mypage .gallery,body.mode-mypage .app,body.mode-mypage .mobile-pv{disp
 .drafts-head{display:flex;align-items:baseline;gap:8px;margin-bottom:16px}
 .drafts-head h2{font-size:18px;font-weight:900}
 .draft-grid{display:grid;gap:12px;grid-template-columns:repeat(auto-fill,minmax(270px,1fr))}
-.draft-card{background:#fff;border:1px solid var(--e-line);border-radius:14px;padding:18px;cursor:pointer;text-align:left;display:flex;flex-direction:column;gap:6px;transition:box-shadow .15s,transform .15s;border:0;color:inherit;width:100%}
+.draft-card{background:#fff;border:1px solid var(--e-line);border-radius:14px;padding:18px;text-align:left;display:flex;flex-direction:column;gap:6px;transition:box-shadow .15s,transform .15s}
 .draft-card:hover{box-shadow:0 6px 18px rgba(31,26,29,.1);transform:translateY(-2px)}
 .dc-title{font-size:15px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .dc-meta{font-size:12.5px;color:var(--e-sub);display:flex;gap:8px;flex-wrap:wrap;align-items:center}
 .dc-badge{font-size:11px;font-weight:700;border-radius:4px;padding:2px 7px;flex-shrink:0}
 .dc-badge.pub{background:#D1F3E2;color:#1E6B46}
 .dc-badge.dft{background:#F0EDEC;color:#6E6469}
+.dc-actions{display:flex;gap:6px;margin-top:10px}
+.dc-edit-btn,.dc-del-btn{flex:1;border-radius:8px;padding:8px 0;font-size:13px;font-weight:700;cursor:pointer}
+.dc-edit-btn{border:1px solid var(--e-line);background:#fff;color:var(--e-ink)}
+.dc-edit-btn:hover{background:var(--e-bg)}
+.dc-del-btn{border:1px solid #FACACA;background:#fff;color:#C0392B}
+.dc-del-btn:hover{background:#FFF0EE}
 .drafts-empty{font-size:14px;color:var(--e-sub);padding:32px 0}
+/* 삭제 확인 모달 */
+.confirm-overlay{position:fixed;inset:0;z-index:400;background:rgba(0,0,0,.5);display:grid;place-items:center;padding:16px;opacity:0;pointer-events:none;transition:opacity .2s}
+.confirm-overlay.show{opacity:1;pointer-events:auto}
+.confirm-modal{background:#fff;border-radius:20px;padding:28px 24px;width:100%;max-width:320px;text-align:center}
+.confirm-modal h3{font-size:17px;font-weight:900;margin-bottom:8px}
+.confirm-modal p{font-size:14px;color:var(--e-sub);line-height:1.6;margin-bottom:22px}
+.confirm-btns{display:flex;gap:8px}
+.confirm-cancel{flex:1;border:1px solid var(--e-line);background:#fff;border-radius:11px;padding:13px;font-size:15px;font-weight:700;cursor:pointer}
+.confirm-ok{flex:1;border:0;background:#C0392B;color:#fff;border-radius:11px;padding:13px;font-size:15px;font-weight:700;cursor:pointer}
+.confirm-ok:hover{background:#A93226}
 
 .expired{position:absolute;inset:0;z-index:20;display:none;place-items:center;text-align:center;background:var(--page);padding:24px}
 .expired.show{display:grid}
@@ -718,6 +734,18 @@ canvas.glitter{position:absolute;inset:0;width:100%;height:100%;pointer-events:n
     <p class="drafts-empty" id="draftsEmpty" hidden>아직 저장된 초대장이 없어요.<br>초대장을 만들고 임시저장하면 여기에 모여요.</p>
   </div>
 </section>
+
+<!-- 삭제 확인 모달 -->
+<div class="confirm-overlay" id="confirmOverlay" role="dialog" aria-modal="true">
+  <div class="confirm-modal">
+    <h3>초대장을 삭제할까요?</h3>
+    <p id="confirmDesc">삭제하면 공유 링크도 함께 사라지고<br>되돌릴 수 없어요.</p>
+    <div class="confirm-btns">
+      <button type="button" class="confirm-cancel" id="confirmCancel">취소</button>
+      <button type="button" class="confirm-ok" id="confirmOk">삭제</button>
+    </div>
+  </div>
+</div>
 
 <div class="toast" id="toast"></div>
 
@@ -1199,25 +1227,57 @@ function renderDrafts(rows) {
     const d = r.data || {};
     const date = d.date ? new Date(d.date).toLocaleDateString('ko-KR') : '날짜 미정';
     const updated = new Date(r.updated_at).toLocaleDateString('ko-KR');
-    return `<button type="button" class="draft-card" data-id="${esc(r.id)}">
+    return `<div class="draft-card" data-id="${esc(r.id)}">
       <div class="dc-title">${esc(d.name || '제목 없음')}</div>
       <div class="dc-meta">
         <span class="dc-badge ${r.published ? 'pub' : 'dft'}">${r.published ? '공개 중' : '임시저장'}</span>
         <span>${esc(date)}</span>${d.place ? `<span>${esc(d.place)}</span>` : ''}
       </div>
       <div class="dc-meta">${esc(updated)} 수정</div>
-    </button>`;
+      <div class="dc-actions">
+        <button type="button" class="dc-edit-btn" data-edit="${esc(r.id)}">수정</button>
+        <button type="button" class="dc-del-btn" data-del="${esc(r.id)}">삭제</button>
+      </div>
+    </div>`;
   }).join('');
-  grid.querySelectorAll('.draft-card').forEach(card => {
-    card.addEventListener('click', () => {
-      const row = rows.find(r => r.id === card.dataset.id);
+  grid.querySelectorAll('.dc-edit-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const row = rows.find(r => r.id === btn.dataset.edit);
       if (!row) return;
       sync.invite = { id: row.id, slug: row.slug, published: row.published };
       applyData({ ...row.data, tpl: row.tpl, tier: row.tier });
       location.hash = 'edit';
     });
   });
+  grid.querySelectorAll('.dc-del-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const row = rows.find(r => r.id === btn.dataset.del);
+      if (!row) return;
+      openConfirm(row.data?.name || '이 초대장', async () => {
+        const { error } = await SB.from('invites').delete().eq('id', row.id);
+        if (error) { toast('삭제하지 못했어요. 다시 시도해 주세요'); return; }
+        if (sync.invite?.id === row.id) { sync.invite = null; renderShare(); }
+        toast('삭제했어요');
+        loadMyPage();
+      });
+    });
+  });
 }
+
+/* 삭제 확인 모달 */
+let _confirmCb = null;
+const confirmOverlay = $('#confirmOverlay');
+function openConfirm(name, cb) {
+  _confirmCb = cb;
+  $('#confirmDesc').innerHTML = `<b>${esc(name)}</b>을(를) 삭제할까요?<br>공유 링크도 사라지고 되돌릴 수 없어요.`;
+  confirmOverlay.classList.add('show');
+}
+$('#confirmCancel').addEventListener('click', () => confirmOverlay.classList.remove('show'));
+$('#confirmOk').addEventListener('click', async () => {
+  confirmOverlay.classList.remove('show');
+  if (_confirmCb) { await _confirmCb(); _confirmCb = null; }
+});
+confirmOverlay.addEventListener('click', e => { if (e.target === confirmOverlay) confirmOverlay.classList.remove('show'); });
 
 /* 공유 링크 발급 (결제는 연동 전: 지금은 바로 발급) */
 function renderShare(){
