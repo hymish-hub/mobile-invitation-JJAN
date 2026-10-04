@@ -568,7 +568,10 @@ canvas.glitter{position:absolute;inset:0;width:100%;height:100%;pointer-events:n
 
     <section class="card">
       <h2>공유 링크</h2>
-      <p class="share-hint" id="shareHint">링크를 만들면 여기에 표시돼요.</p>
+      <div id="sharePre">
+        <div class="cta-total" style="margin-bottom:14px"><span>결제 금액</span><strong id="total">1,000원</strong></div>
+        <button class="pay" id="pay" type="button" style="width:100%">공유 링크 만들기</button>
+      </div>
       <div class="share" id="share">
         <div class="share-url"><input id="shareUrl" readonly aria-label="공유 링크"><button type="button" id="copyLink">복사</button></div>
         <div class="share-btns"><button type="button" class="kakao" id="kakaoShare">카카오톡으로 보내기</button><a id="openShared" target="_blank" rel="noopener">새 창에서 열기</a></div>
@@ -577,11 +580,7 @@ canvas.glitter{position:absolute;inset:0;width:100%;height:100%;pointer-events:n
     </section>
 
     <div class="cta-row">
-      <div class="cta-total"><span>결제 금액</span><strong id="total">1,000원</strong></div>
-      <div class="cta-btns">
-        <button class="save-draft" id="saveDraft" type="button">임시저장</button>
-        <button class="pay" id="pay" type="button">공유 링크 만들기</button>
-      </div>
+      <button class="save-draft" id="saveDraft" type="button" style="width:100%">임시저장</button>
     </div>
 
     <section class="card">
@@ -1282,10 +1281,9 @@ confirmOverlay.addEventListener('click', e => { if (e.target === confirmOverlay)
 /* 공유 링크 발급 (결제는 연동 전: 지금은 바로 발급) */
 function renderShare(){
   const on = !!(sync.invite && sync.invite.published);
+  $('#sharePre').hidden = on;
   $('#share').classList.toggle('show', on);
-  $('#shareHint').hidden = on;
   $('#saveDraft').textContent = on ? '저장하기' : '임시저장';
-  $('#pay').textContent = on ? '공유 링크 다시 보기' : '공유 링크 만들기';
   if (!on) return;
   const url = shareLink();
   $('#shareUrl').value = url; $('#openShared').href = url;
