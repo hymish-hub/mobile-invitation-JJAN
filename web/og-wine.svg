@@ -1,0 +1,67 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" width="1200" height="630">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0"   stop-color="#E9C24A"/>
+      <stop offset=".55" stop-color="#E68A3B"/>
+      <stop offset="1"   stop-color="#D9653A"/>
+    </linearGradient>
+    <linearGradient id="wine" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#DA3550"/>
+      <stop offset="1" stop-color="#8C1547"/>
+    </linearGradient>
+    <!-- Clip paths for each glass bowl -->
+    <clipPath id="c0">
+      <path d="M303 90 L303 208 C303 262 337 288 347.5 302 L352.5 302 C363 288 397 262 397 208 L397 90 Z"/>
+    </clipPath>
+    <clipPath id="c1">
+      <path d="M553 70 L553 218 C553 272 587 298 597.5 312 L602.5 312 C613 298 647 272 647 218 L647 70 Z"/>
+    </clipPath>
+    <clipPath id="c2">
+      <path d="M803 90 L803 208 C803 262 837 288 847.5 302 L852.5 302 C863 288 897 262 897 208 L897 90 Z"/>
+    </clipPath>
+  </defs>
+
+  <rect width="1200" height="630" fill="url(#bg)"/>
+
+  <!-- Bottom wave band -->
+  <path d="M-100 510 Q50 495 200 510 T500 510 T800 510 T1100 510 T1400 510 L1400 630 L-100 630Z"
+    fill="url(#wine)" opacity=".9"/>
+
+  <!-- === Glass 1 (left, medium) === -->
+  <!-- Bowl outline -->
+  <path d="M303 90 L303 208 C303 262 337 288 347.5 302 L352.5 302 C363 288 397 262 397 208 L397 90 Z"
+    fill="none" stroke="#A3243F" stroke-width="2.5"/>
+  <!-- Wine fill (clipped) -->
+  <rect x="300" y="190" width="100" height="120" fill="url(#wine)" opacity=".8" clip-path="url(#c0)"/>
+  <!-- Wave surface -->
+  <path d="M303 192 Q318 185 333 192 T363 192 T397 192" fill="none" stroke="rgba(255,255,255,.35)" stroke-width="2"/>
+  <!-- Stem -->
+  <rect x="348" y="302" width="4" height="110" fill="#A3243F"/>
+  <!-- Base -->
+  <rect x="310" y="408" width="80" height="10" rx="3" fill="#A3243F"/>
+
+  <!-- === Glass 2 (center, larger) === -->
+  <path d="M553 70 L553 218 C553 272 587 298 597.5 312 L602.5 312 C613 298 647 272 647 218 L647 70 Z"
+    fill="none" stroke="#A3243F" stroke-width="2.5"/>
+  <rect x="550" y="190" width="100" height="125" fill="url(#wine)" opacity=".85" clip-path="url(#c1)"/>
+  <path d="M553 193 Q568 185 583 193 T613 193 T647 193" fill="none" stroke="rgba(255,255,255,.35)" stroke-width="2"/>
+  <!-- Bubbles -->
+  <circle cx="576" cy="268" r="3"   fill="#FFD3DD" opacity=".7"/>
+  <circle cx="592" cy="248" r="2.2" fill="#FFD3DD" opacity=".6"/>
+  <circle cx="608" cy="260" r="2.8" fill="#FFD3DD" opacity=".65"/>
+  <!-- Stem & base -->
+  <rect x="598" y="312" width="4" height="110" fill="#A3243F"/>
+  <rect x="560" y="418" width="80" height="10" rx="3" fill="#A3243F"/>
+
+  <!-- === Glass 3 (right, medium) === -->
+  <path d="M803 90 L803 208 C803 262 837 288 847.5 302 L852.5 302 C863 288 897 262 897 208 L897 90 Z"
+    fill="none" stroke="#A3243F" stroke-width="2.5"/>
+  <rect x="800" y="165" width="100" height="145" fill="url(#wine)" opacity=".8" clip-path="url(#c2)"/>
+  <path d="M803 168 Q818 160 833 168 T863 168 T897 168" fill="none" stroke="rgba(255,255,255,.35)" stroke-width="2"/>
+  <rect x="848" y="302" width="4" height="110" fill="#A3243F"/>
+  <rect x="810" y="408" width="80" height="10" rx="3" fill="#A3243F"/>
+
+  <!-- Clinking sparkle between glasses 1 & 2 -->
+  <path d="M470 130 l3 7 7 3-7 3-3 7-3-7-7-3 7-3Z" fill="white" opacity=".6"/>
+  <path d="M700 110 l2.5 6 6 2.5-6 2.5-2.5 6-2.5-6-6-2.5 6-2.5Z" fill="white" opacity=".5"/>
+</svg>

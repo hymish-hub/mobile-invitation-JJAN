@@ -103,11 +103,15 @@ body.mode-gallery .gallery{display:block}
 body.mode-gallery .app,body.mode-gallery .mobile-pv{display:none!important}
 .promo{background:var(--e-accent);color:#fff;text-align:center;font-size:13px;font-weight:500;padding:9px 16px}
 .site-head{position:sticky;top:env(safe-area-inset-top,0px);z-index:30;display:flex;align-items:center;gap:20px;padding:14px max(16px,calc((100% - 1120px)/2));background:rgba(251,248,246,.92);backdrop-filter:blur(10px);border-bottom:1px solid var(--e-line)}
-.logo{font-family:'IBM Plex Mono',monospace;font-size:13px;letter-spacing:.14em;color:var(--e-ink);text-decoration:none;white-space:nowrap}
+.logo{font-family:'IBM Plex Mono',monospace;font-size:13px;letter-spacing:.14em;color:var(--e-ink);text-decoration:none;white-space:nowrap;line-height:1.2}
+.logo-jjan{font-size:18px;font-weight:700;letter-spacing:.06em;color:var(--e-accent);font-style:normal}
+.logo-sub{font-size:10px;font-weight:400;letter-spacing:.2em;color:var(--e-sub);display:block}
 .logo b{font-weight:500;color:var(--e-accent)}
-.site-nav{display:flex;gap:18px;margin-left:auto}
+.site-nav{display:flex;gap:18px;margin-left:auto;align-items:center}
 .site-nav a{font-size:14px;font-weight:500;color:var(--e-sub);text-decoration:none}
 .site-nav a:hover{color:var(--e-ink)}
+.site-nav-btn{font-size:14px;font-weight:500;color:var(--e-sub);background:none;border:0;padding:0;cursor:pointer;font-family:inherit}
+.site-nav-btn:hover{color:var(--e-ink)}
 .head-cta{background:var(--e-ink);color:#fff;text-decoration:none;font-size:13.5px;font-weight:700;padding:9px 16px;border-radius:999px;white-space:nowrap}
 @media (max-width:640px){.site-nav{display:none}.head-cta{margin-left:auto}}
 
@@ -245,6 +249,14 @@ body.mode-gallery .app,body.mode-gallery .mobile-pv{display:none!important}
 .save-draft{border:1.5px solid var(--e-line);background:#fff;border-radius:11px;padding:14px 18px;font-weight:700;font-size:15px;color:var(--e-ink)}
 .save-draft:hover{background:var(--e-bg)}
 .btn-group{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+/* CTA 행 */
+.cta-row{margin-bottom:14px}
+.cta-total{display:flex;align-items:baseline;gap:10px;margin-bottom:14px}
+.cta-total span{font-size:13px;color:var(--e-sub)}
+.cta-total strong{font-size:24px;font-weight:900;font-variant-numeric:tabular-nums}
+.cta-btns{display:flex;gap:8px}
+.cta-btns .pay{flex:1}
+.share-hint{font-size:13px;color:var(--e-sub);padding:4px 0}
 
 /* 로그인 모달 */
 .auth-overlay{position:fixed;inset:0;z-index:300;background:rgba(0,0,0,.5);display:grid;place-items:end center;padding:16px;opacity:0;pointer-events:none;transition:opacity .2s}
@@ -390,11 +402,10 @@ canvas.glitter{position:absolute;inset:0;width:100%;height:100%;pointer-events:n
   <!-- list 화면: 서비스 메인 겸 템플릿 탐색 -->
   <div class="promo">기본 초대장은 무료 · 선물상자, 커튼 연출은 1,000원부터</div>
   <header class="site-head">
-    <a class="logo" href="#" aria-label="MOBILE INVITATION 홈">MOBILE <b>INVITATION</b></a>
+    <a class="logo" href="#" aria-label="JJAN mobile invitation 홈"><b class="logo-jjan">JJAN</b><span class="logo-sub">mobile invitation</span></a>
     <nav class="site-nav" aria-label="주요 메뉴">
-      <a href="#templates">템플릿</a><a href="#effects">오프닝 연출</a><a href="#how">만드는 법</a>
+      <a href="#templates">템플릿</a><button type="button" class="site-nav-btn" id="mypageNavBtn">내 초대장</button>
     </nav>
-    <button type="button" class="auth-btn" id="mypageBtn" hidden>내 초대장</button>
     <a class="head-cta" href="#templates">만들기</a>
   </header>
 
@@ -472,13 +483,13 @@ canvas.glitter{position:absolute;inset:0;width:100%;height:100%;pointer-events:n
     </ul>
   </section>
 
-  <footer class="site-foot"><span class="logo">MOBILE <b>INVITATION</b></span><span>결제는 연동 전이라 지금은 공유 링크가 무료로 발급돼요.</span></footer>
+  <footer class="site-foot"><span class="logo"><b class="logo-jjan">JJAN</b><span class="logo-sub">mobile invitation</span></span><span>결제는 연동 전이라 지금은 공유 링크가 무료로 발급돼요.</span></footer>
 </section>
 
 <div class="app">
   <!-- ───────── 편집 패널 ───────── -->
   <div>
-    <button type="button" class="back-link" id="backToGallery">← 템플릿 다시 고르기</button>
+    <button type="button" class="back-link" id="backToGallery">← Back</button>
     <div class="app-head"><h1>초대장 만들기</h1><div class="auth-row"><span id="saveState">이 화면에서만 미리보기</span><button type="button" class="auth-btn" id="mypageEditBtn" hidden>내 초대장</button><button type="button" class="auth-btn" id="authBtn" hidden></button></div></div>
 
     <section class="card">
@@ -540,19 +551,22 @@ canvas.glitter{position:absolute;inset:0;width:100%;height:100%;pointer-events:n
     </section>
 
     <section class="card">
-      <div class="total">
-        <div><div style="font-size:13px;color:var(--e-sub)">결제 금액</div><strong id="total">1,000원</strong></div>
-        <div class="btn-group">
-          <button class="save-draft" id="saveDraft" type="button">임시저장</button>
-          <button class="pay" id="pay" type="button">공유 링크 만들기</button>
-        </div>
-      </div>
+      <h2>공유 링크</h2>
+      <p class="share-hint" id="shareHint">링크를 만들면 여기에 표시돼요.</p>
       <div class="share" id="share">
         <div class="share-url"><input id="shareUrl" readonly aria-label="공유 링크"><button type="button" id="copyLink">복사</button></div>
         <div class="share-btns"><button type="button" class="kakao" id="kakaoShare">카카오톡으로 보내기</button><a id="openShared" target="_blank" rel="noopener">새 창에서 열기</a></div>
         <small id="shareNote"></small>
       </div>
     </section>
+
+    <div class="cta-row">
+      <div class="cta-total"><span>결제 금액</span><strong id="total">1,000원</strong></div>
+      <div class="cta-btns">
+        <button class="save-draft" id="saveDraft" type="button">임시저장</button>
+        <button class="pay" id="pay" type="button">공유 링크 만들기</button>
+      </div>
+    </div>
 
     <section class="card">
       <h2>받은 참석 응답 <small id="respSum"></small></h2>
@@ -690,7 +704,7 @@ canvas.glitter{position:absolute;inset:0;width:100%;height:100%;pointer-events:n
 <!-- 마이페이지 -->
 <section class="mypage" id="mypage">
   <div class="mp-bar">
-    <a class="logo" href="#" aria-label="홈">MOBILE <b>INVITATION</b></a>
+    <a class="logo" href="#" aria-label="홈"><b class="logo-jjan">JJAN</b><span class="logo-sub">mobile invitation</span></a>
     <button type="button" class="mp-signout" id="mpSignout">로그아웃</button>
   </div>
   <div class="mp-content">
@@ -1062,7 +1076,7 @@ poster.addEventListener('click', play);
    config.js가 비어 있으면 서버 없이 이 화면 안에서만 미리보기로 동작 */
 const CFG = window.INVITE_CONFIG || {};
 const SB = (CFG.supabaseUrl && CFG.supabaseAnonKey && window.supabase) ? window.supabase.createClient(CFG.supabaseUrl, CFG.supabaseAnonKey) : null;
-const SLUG = (location.hash.match(/^#i\/([A-Za-z0-9]{4,16})$/) || [])[1] || null;
+const SLUG = (location.pathname.match(/^\/i\/([A-Za-z0-9]{4,16})\/?$/) || [])[1] || null;
 const isGuestView = () => !!SLUG || location.hash === '#guest';
 const FIELDS = ['f-t1','f-t2','f-w1','f-w2','f-w3','f-name','f-host','f-msg','f-date','f-time','f-place','f-detail','f-addr'];
 const sync = {user:null, invite:null, timer:null, saving:false, again:false};
@@ -1089,17 +1103,16 @@ function expiresAt(d){   // 행사일 + 7일(무료) / +37일 / +372일
   const days = {'0':7, '500':37, '2000':372}[d.period] ?? 7;
   return new Date(base.getTime() + days * 864e5).toISOString();
 }
-const shareLink = () => sync.invite ? `${location.origin}/#i/${sync.invite.slug}` : '';
+const shareLink = () => sync.invite ? `${location.origin}/i/${sync.invite.slug}` : '';
 
 /* 로그인 */
 const G_ICON = '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="#4285F4" d="M22.5 12.3c0-.8-.1-1.5-.2-2.2H12v4.2h5.9a5 5 0 01-2.2 3.3v2.7h3.6c2-1.9 3.2-4.7 3.2-8z"/><path fill="#34A853" d="M12 23c3 0 5.5-1 7.3-2.7l-3.6-2.7c-1 .7-2.2 1.1-3.7 1.1-2.9 0-5.3-1.9-6.2-4.5H2.1v2.8A11 11 0 0012 23z"/><path fill="#FBBC05" d="M5.8 14.2a6.6 6.6 0 010-4.3V7.1H2.1a11 11 0 000 9.9z"/><path fill="#EA4335" d="M12 5.4c1.6 0 3.1.6 4.2 1.7l3.2-3.2A11 11 0 002.1 7.1l3.7 2.8C6.7 7.3 9.1 5.4 12 5.4z"/></svg>';
 function renderAuth(){
-  const b = $('#authBtn'); if (!SB){ b.hidden = true; $('#mypageBtn').hidden = true; $('#mypageEditBtn').hidden = true; return; }
+  const b = $('#authBtn'); if (!SB){ b.hidden = true; $('#mypageEditBtn').hidden = true; return; }
   b.hidden = false;
   const loggedIn = !!sync.user;
   if (loggedIn){ b.textContent = '로그아웃'; b.title = sync.user.email || ''; }
   else { b.innerHTML = G_ICON + 'Google로 로그인'; b.title = ''; }
-  $('#mypageBtn').hidden = !loggedIn;
   $('#mypageEditBtn').hidden = !loggedIn;
   if (!loggedIn) setSave('로그인하면 자동 저장돼요');
 }
@@ -1160,7 +1173,7 @@ $('#authModalClose').addEventListener('click', closeAuthModal);
 $('#authModalGoogle').addEventListener('click', () => { closeAuthModal(); signIn(); });
 
 /* 마이페이지 진입 */
-$('#mypageBtn').addEventListener('click', () => { location.hash = 'mypage'; });
+$('#mypageNavBtn').addEventListener('click', () => { if (sync.user) location.hash = 'mypage'; else openAuthModal(); });
 $('#mypageEditBtn').addEventListener('click', () => { location.hash = 'mypage'; });
 $('#mpNew').addEventListener('click', () => { location.hash = 'edit'; });
 $('#mpSignout').addEventListener('click', async () => {
@@ -1210,11 +1223,13 @@ function renderDrafts(rows) {
 function renderShare(){
   const on = !!(sync.invite && sync.invite.published);
   $('#share').classList.toggle('show', on);
+  $('#shareHint').hidden = on;
+  $('#saveDraft').textContent = on ? '저장하기' : '임시저장';
+  $('#pay').textContent = on ? '공유 링크 다시 보기' : '공유 링크 만들기';
   if (!on) return;
   const url = shareLink();
   $('#shareUrl').value = url; $('#openShared').href = url;
   $('#shareNote').textContent = `공개 기간: ${new Date(expiresAt(collect())).toLocaleDateString('ko-KR')}까지 · 내용을 고치면 같은 링크에 바로 반영돼요`;
-  $('#pay').textContent = '공유 링크 다시 보기';
 }
 $('#pay').addEventListener('click', async () => {
   if (!SB){ toast('config.js에 서버 정보를 넣으면 실제 링크가 만들어져요'); return; }
@@ -1234,7 +1249,7 @@ $('#kakaoShare').addEventListener('click', () => {
   Kakao.Share.sendDefault({
     objectType: 'feed',
     content: {title: val('f-name') || '초대장이 도착했어요', description: [fmtDate(val('f-date')), val('f-place')].filter(Boolean).join(' · '),
-      imageUrl: location.origin + '/og.png', link: {mobileWebUrl: url, webUrl: url}},
+      imageUrl: `${location.origin}/og-${curTpl()}.svg`, link: {mobileWebUrl: url, webUrl: url}},
     buttons: [{title: '초대장 열기', link: {mobileWebUrl: url, webUrl: url}}]
   });
 });
@@ -1333,14 +1348,12 @@ function applyMode(){
 })();
 $$('[data-tpl]').forEach(b => b.addEventListener('click', () => {
   const t = b.dataset.tpl;
-  if (t !== curTpl()){   // 템플릿을 바꾸면 포스터 문구만 그 템플릿 예시로, 나머지 정보는 유지
-    const prev = TPL[curTpl()];
-    setTemplate(t); $('#f-t1').value = TPL[t].t1; $('#f-t2').value = TPL[t].t2;
-    // 예시 문구를 그대로 쓰고 있었다면 새 템플릿 예시로 교체 (직접 쓴 내용은 유지)
-    if ($('#f-name').value === prev.name) $('#f-name').value = TPL[t].name;
-    if ($('#f-msg').value.trim() === prev.msg) $('#f-msg').value = TPL[t].msg;
-    render(); queueSave();
-  }
+  // 갤러리에서 템플릿 선택 시 항상 새 초대장으로 시작 (기존 sync.invite와 분리)
+  sync.invite = null;
+  setTemplate(t);
+  $('#f-t1').value = TPL[t].t1; $('#f-t2').value = TPL[t].t2;
+  $('#f-name').value = TPL[t].name; $('#f-msg').value = TPL[t].msg;
+  render(); updateTotal(); renderShare();
   location.hash = 'edit';
 }));
 $('#backToGallery').addEventListener('click', () => { location.hash = ''; });

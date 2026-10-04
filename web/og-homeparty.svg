@@ -1,0 +1,34 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" width="1200" height="630">
+  <!-- Yellow background -->
+  <rect width="1200" height="630" fill="#FFD43B"/>
+  <!-- Background circles -->
+  <circle cx="80"   cy="80"  r="55" fill="#E8603C" opacity=".1"/>
+  <circle cx="1120" cy="100" r="45" fill="#E8603C" opacity=".1"/>
+  <circle cx="100"  cy="560" r="40" fill="#E8603C" opacity=".1"/>
+  <circle cx="1100" cy="530" r="60" fill="#E8603C" opacity=".1"/>
+  <!-- Sparkles -->
+  <path d="M140 220 l4 11 11 4-11 4-4 11-4-11-11-4 11-4Z" fill="#E8603C" opacity=".3"/>
+  <path d="M1060 380 l3  8  8 3 -8 3-3  8-3 -8-8-3  8-3Z" fill="#E8603C" opacity=".25"/>
+  <!-- Poster card -->
+  <rect x="465" y="115" width="270" height="400" fill="#E8603C" rx="4"/>
+  <!-- Ribbon (original path scaled 0.9, centered on poster) -->
+  <g transform="translate(465,143) scale(0.9)">
+    <path d="M150 150 C 96 70, 22 78, 40 132 C 56 180, 122 172, 150 150
+             C 178 172, 244 180, 260 132 C 278 78, 204 70, 150 150
+             M150 150 C 128 196, 96 222, 70 300
+             M150 150 C 172 196, 204 222, 236 300
+             M150 150 C 140 210, 160 250, 150 318"
+      fill="none" stroke="#FFD43B" stroke-width="13"
+      stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+  <!-- Stickers -->
+  <circle cx="649" cy="158" r="18" fill="#8ED8F8" stroke="white" stroke-width="3"/>
+  <circle cx="644" cy="153" r="5"  fill="white" opacity=".8"/>
+  <path d="M519 202 l3.6 7.4 8.2 1.2-5.9 5.7 1.4 8.2-7.3-3.8-7.3 3.8 1.4-8.2-5.9-5.7 8.2-1.2Z"
+    fill="#FFD84D" stroke="white" stroke-width="2.5" stroke-linejoin="round"/>
+  <path d="M489 325 a9 9 0 0 1 15-6.8 a9 9 0 0 1 15 6.8 c0 11-15 22-15 22s-15-11-15-22Z"
+    fill="#FF7FB0" stroke="white" stroke-width="2.5"/>
+  <path d="M678 367 l11-15 11 15-11 18Z"
+    fill="#C9B6FF" stroke="white" stroke-width="2.5" stroke-linejoin="round"/>
+  <line x1="667" y1="367" x2="700" y2="367" stroke="white" stroke-width="1.5" opacity=".5"/>
+</svg>

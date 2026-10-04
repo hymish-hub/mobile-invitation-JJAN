@@ -471,7 +471,7 @@ canvas.glitter{position:absolute;inset:0;width:100%;height:100%;pointer-events:n
         <div><div style="font-size:13px;color:var(--e-sub)">결제 금액</div><strong id="total">1,000원</strong></div>
         <button class="pay" id="pay" type="button">결제하고 공유 링크 받기</button>
       </div>
-      <div class="linkbox" id="linkbox"><span style="flex:1;min-width:0">공유 링크: 이 페이지 주소 끝에 <code>#guest</code>를 붙인 주소</span><button class="open-guest" id="openGuest" type="button">참석자 화면 열기</button></div>
+      <div class="linkbox" id="linkbox"><code id="shareUrl"></code><button id="copyLink" type="button" class="open-guest">복사</button><button class="open-guest" id="openGuest" type="button">열기</button></div>
     </section>
   </div>
 
@@ -671,9 +671,21 @@ $$('input[name=period]').forEach(r => r.addEventListener('change', () => { updat
 
 /* 결제 (데모) */
 function toast(msg){ const t = $('#toast'); t.textContent = msg; t.classList.add('show'); clearTimeout(t._h); t._h = setTimeout(() => t.classList.remove('show'), 2200); }
-$('#pay').addEventListener('click', () => { $('#linkbox').classList.add('show'); toast('데모: 결제 연동 전입니다'); });
+function makeShareUrl(){
+  try {
+    const encoded = btoa(unescape(encodeURIComponent(JSON.stringify(collect()))));
+    return location.href.split('#')[0] + '#guest/' + encoded;
+  } catch { return location.href.split('#')[0] + '#guest'; }
+}
+$('#pay').addEventListener('click', () => {
+  const url = makeShareUrl();
+  $('#shareUrl').textContent = url;
+  $('#linkbox').classList.add('show');
+  $('#linkbox').scrollIntoView({behavior:'smooth', block:'nearest'});
+});
 async function copy(text, okMsg){ try { await navigator.clipboard.writeText(text); toast(okMsg); } catch { toast('복사하지 못했어요. 길게 눌러 직접 복사해 주세요'); } }
-$('#openGuest').addEventListener('click', () => { location.hash = 'guest'; });
+$('#copyLink').addEventListener('click', () => copy($('#shareUrl').textContent, '링크를 복사했어요 ✓'));
+$('#openGuest').addEventListener('click', () => { location.href = makeShareUrl(); });
 
 /* 전체화면 미리보기 */
 const openFull = () => { document.body.classList.add('fullpv'); scrollGuestTop(); requestAnimationFrame(play); };
@@ -999,10 +1011,15 @@ async function connect(){
 }
 /* 화면 이동: (기본) 템플릿 선택 → #edit 편집 → #guest 참석자 화면(공유 링크) */
 function applyMode(){
-  const h = location.hash, guest = h === '#guest', edit = h === '#edit';
+  const h = location.hash, guest = h === '#guest' || h.startsWith('#guest/'), edit = h === '#edit';
   document.body.classList.toggle('guestmode', guest);
   document.body.classList.toggle('mode-gallery', !guest && !edit);
-  if (guest){ document.body.classList.remove('fullpv'); scrollGuestTop(); play(); }
+  if (guest){
+    if (h.startsWith('#guest/')){
+      try { applyData(JSON.parse(decodeURIComponent(escape(atob(h.slice(7)))))); } catch{}
+    }
+    document.body.classList.remove('fullpv'); scrollGuestTop(); play();
+  }
   else if (edit){ window.scrollTo(0, 0); if (matchMedia('(min-width:920px)').matches){ scrollGuestTop(); play(); } }
   else { document.body.classList.remove('fullpv'); window.scrollTo(0, 0); }
 }
@@ -1048,7 +1065,7 @@ window.addEventListener('hashchange', applyMode);
 setTemplate('homeparty');
 render(); updateTotal();
 const fontsReady = document.fonts ? document.fonts.ready : Promise.resolve();
-if (location.hash === '#guest') document.body.classList.add('guestmode');
+if (location.hash === '#guest' || location.hash.startsWith('#guest/')) document.body.classList.add('guestmode');
 else if (location.hash !== '#edit') document.body.classList.add('mode-gallery');
 Promise.all([fontsReady, connect().catch(() => false)]).then(() => {
   applyMode();   // 모바일 편집 화면은 미리보기를 열 때 재생
