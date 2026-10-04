@@ -240,6 +240,51 @@ body.mode-gallery .app,body.mode-gallery .mobile-pv{display:none!important}
 .resp-list li{display:flex;justify-content:space-between;border-bottom:1px solid var(--e-line);padding:6px 0}
 .resp-list .yes{color:#1E8A4C;font-weight:700}.resp-list .no{color:var(--e-sub)}
 .resp-empty{font-size:13px;color:var(--e-sub)}
+
+/* 임시저장 버튼 */
+.save-draft{border:1.5px solid var(--e-line);background:#fff;border-radius:11px;padding:14px 18px;font-weight:700;font-size:15px;color:var(--e-ink)}
+.save-draft:hover{background:var(--e-bg)}
+.btn-group{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+
+/* 로그인 모달 */
+.auth-overlay{position:fixed;inset:0;z-index:300;background:rgba(0,0,0,.5);display:grid;place-items:end center;padding:16px;opacity:0;pointer-events:none;transition:opacity .2s}
+@media (min-width:500px){.auth-overlay{place-items:center}}
+.auth-overlay.show{opacity:1;pointer-events:auto}
+.auth-modal{background:#fff;border-radius:20px;padding:32px 24px;width:100%;max-width:360px;text-align:center;transform:translateY(24px);transition:transform .25s ease}
+.auth-overlay.show .auth-modal{transform:none}
+.auth-modal h3{font-size:20px;font-weight:900;margin-bottom:8px}
+.auth-modal p{font-size:14px;color:var(--e-sub);line-height:1.6;margin-bottom:24px}
+.g-login-btn{width:100%;display:flex;align-items:center;justify-content:center;gap:10px;border:1.5px solid var(--e-line);border-radius:12px;background:#fff;padding:13px 16px;font-size:15px;font-weight:700;cursor:pointer;color:var(--e-ink)}
+.g-login-btn:hover{background:var(--e-bg)}
+.g-login-btn svg{width:20px;height:20px;flex-shrink:0}
+.auth-dismiss{margin-top:12px;background:none;border:0;color:var(--e-sub);font-size:13px;text-decoration:underline;cursor:pointer}
+
+/* 마이페이지 */
+.mypage{display:none;background:#FBF8F6;min-height:100vh}
+body.mode-mypage .mypage{display:block}
+body.mode-mypage .gallery,body.mode-mypage .app,body.mode-mypage .mobile-pv{display:none!important}
+.mp-bar{background:rgba(251,248,246,.92);backdrop-filter:blur(10px);border-bottom:1px solid var(--e-line);padding:14px max(16px,calc((100% - 1120px)/2));display:flex;align-items:center;gap:14px;position:sticky;top:0;z-index:30}
+.mp-bar .logo{flex:1;min-width:0}
+.mp-back{background:none;border:0;font-size:13px;font-weight:700;color:var(--e-sub);padding:0;cursor:pointer}
+.mp-back:hover{color:var(--e-ink)}
+.mp-signout{border:1px solid var(--e-line);background:#fff;border-radius:999px;padding:7px 14px;font-size:13px;font-weight:700;color:var(--e-sub);cursor:pointer}
+.mp-content{max-width:1120px;margin:0 auto;padding:36px 16px 64px}
+.mp-greeting{margin-bottom:28px}
+.mp-greeting h1{font-size:26px;font-weight:900;letter-spacing:-.02em}
+.mp-greeting p{font-size:13.5px;color:var(--e-sub);margin-top:4px}
+.mp-new{background:var(--e-ink);color:#fff;border:0;border-radius:999px;padding:9px 18px;font-size:13.5px;font-weight:700;margin-top:16px;cursor:pointer}
+.drafts-head{display:flex;align-items:baseline;gap:8px;margin-bottom:16px}
+.drafts-head h2{font-size:18px;font-weight:900}
+.draft-grid{display:grid;gap:12px;grid-template-columns:repeat(auto-fill,minmax(270px,1fr))}
+.draft-card{background:#fff;border:1px solid var(--e-line);border-radius:14px;padding:18px;cursor:pointer;text-align:left;display:flex;flex-direction:column;gap:6px;transition:box-shadow .15s,transform .15s;border:0;color:inherit;width:100%}
+.draft-card:hover{box-shadow:0 6px 18px rgba(31,26,29,.1);transform:translateY(-2px)}
+.dc-title{font-size:15px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dc-meta{font-size:12.5px;color:var(--e-sub);display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.dc-badge{font-size:11px;font-weight:700;border-radius:4px;padding:2px 7px;flex-shrink:0}
+.dc-badge.pub{background:#D1F3E2;color:#1E6B46}
+.dc-badge.dft{background:#F0EDEC;color:#6E6469}
+.drafts-empty{font-size:14px;color:var(--e-sub);padding:32px 0}
+
 .expired{position:absolute;inset:0;z-index:20;display:none;place-items:center;text-align:center;background:var(--page);padding:24px}
 .expired.show{display:grid}
 .expired b{display:block;font-family:var(--display);font-size:26px;margin-bottom:8px}
@@ -349,6 +394,7 @@ canvas.glitter{position:absolute;inset:0;width:100%;height:100%;pointer-events:n
     <nav class="site-nav" aria-label="주요 메뉴">
       <a href="#templates">템플릿</a><a href="#effects">오프닝 연출</a><a href="#how">만드는 법</a>
     </nav>
+    <button type="button" class="auth-btn" id="mypageBtn" hidden>내 초대장</button>
     <a class="head-cta" href="#templates">만들기</a>
   </header>
 
@@ -433,7 +479,7 @@ canvas.glitter{position:absolute;inset:0;width:100%;height:100%;pointer-events:n
   <!-- ───────── 편집 패널 ───────── -->
   <div>
     <button type="button" class="back-link" id="backToGallery">← 템플릿 다시 고르기</button>
-    <div class="app-head"><h1>초대장 만들기</h1><div class="auth-row"><span id="saveState">이 화면에서만 미리보기</span><button type="button" class="auth-btn" id="authBtn" hidden></button></div></div>
+    <div class="app-head"><h1>초대장 만들기</h1><div class="auth-row"><span id="saveState">이 화면에서만 미리보기</span><button type="button" class="auth-btn" id="mypageEditBtn" hidden>내 초대장</button><button type="button" class="auth-btn" id="authBtn" hidden></button></div></div>
 
     <section class="card">
       <h2>포스터</h2>
@@ -496,7 +542,10 @@ canvas.glitter{position:absolute;inset:0;width:100%;height:100%;pointer-events:n
     <section class="card">
       <div class="total">
         <div><div style="font-size:13px;color:var(--e-sub)">결제 금액</div><strong id="total">1,000원</strong></div>
-        <button class="pay" id="pay" type="button">공유 링크 만들기</button>
+        <div class="btn-group">
+          <button class="save-draft" id="saveDraft" type="button">임시저장</button>
+          <button class="pay" id="pay" type="button">공유 링크 만들기</button>
+        </div>
       </div>
       <div class="share" id="share">
         <div class="share-url"><input id="shareUrl" readonly aria-label="공유 링크"><button type="button" id="copyLink">복사</button></div>
@@ -624,6 +673,37 @@ canvas.glitter{position:absolute;inset:0;width:100%;height:100%;pointer-events:n
 
 <!-- 전체화면 미리보기 상단 바 (초대자에게만 보임) -->
 <div class="pv-bar"><button type="button" id="closeFull">← 편집으로</button><span>미리보기 · 참석자 화면</span><button type="button" data-replay>↻ 연출</button></div>
+
+<!-- 로그인 모달 -->
+<div class="auth-overlay" id="authOverlay" role="dialog" aria-modal="true" aria-label="로그인">
+  <div class="auth-modal">
+    <h3>로그인하고 저장하기</h3>
+    <p>Google로 로그인하면 초대장을 저장하고<br>언제든지 다시 편집할 수 있어요.</p>
+    <button class="g-login-btn" id="authModalGoogle">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="#4285F4" d="M22.5 12.3c0-.8-.1-1.5-.2-2.2H12v4.2h5.9a5 5 0 01-2.2 3.3v2.7h3.6c2-1.9 3.2-4.7 3.2-8z"/><path fill="#34A853" d="M12 23c3 0 5.5-1 7.3-2.7l-3.6-2.7c-1 .7-2.2 1.1-3.7 1.1-2.9 0-5.3-1.9-6.2-4.5H2.1v2.8A11 11 0 0012 23z"/><path fill="#FBBC05" d="M5.8 14.2a6.6 6.6 0 010-4.3V7.1H2.1a11 11 0 000 9.9z"/><path fill="#EA4335" d="M12 5.4c1.6 0 3.1.6 4.2 1.7l3.2-3.2A11 11 0 002.1 7.1l3.7 2.8C6.7 7.3 9.1 5.4 12 5.4z"/></svg>
+      Google로 계속하기
+    </button>
+    <button class="auth-dismiss" id="authModalClose">취소</button>
+  </div>
+</div>
+
+<!-- 마이페이지 -->
+<section class="mypage" id="mypage">
+  <div class="mp-bar">
+    <a class="logo" href="#" aria-label="홈">MOBILE <b>INVITATION</b></a>
+    <button type="button" class="mp-signout" id="mpSignout">로그아웃</button>
+  </div>
+  <div class="mp-content">
+    <div class="mp-greeting">
+      <h1>내 초대장</h1>
+      <p id="mpEmail"></p>
+      <button type="button" class="mp-new" id="mpNew">+ 새 초대장 만들기</button>
+    </div>
+    <div class="drafts-head"><h2>저장된 초대장</h2></div>
+    <div class="draft-grid" id="draftGrid"></div>
+    <p class="drafts-empty" id="draftsEmpty" hidden>아직 저장된 초대장이 없어요.<br>초대장을 만들고 임시저장하면 여기에 모여요.</p>
+  </div>
+</section>
 
 <div class="toast" id="toast"></div>
 
@@ -1014,11 +1094,14 @@ const shareLink = () => sync.invite ? `${location.origin}/i/${sync.invite.slug}`
 /* 로그인 */
 const G_ICON = '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="#4285F4" d="M22.5 12.3c0-.8-.1-1.5-.2-2.2H12v4.2h5.9a5 5 0 01-2.2 3.3v2.7h3.6c2-1.9 3.2-4.7 3.2-8z"/><path fill="#34A853" d="M12 23c3 0 5.5-1 7.3-2.7l-3.6-2.7c-1 .7-2.2 1.1-3.7 1.1-2.9 0-5.3-1.9-6.2-4.5H2.1v2.8A11 11 0 0012 23z"/><path fill="#FBBC05" d="M5.8 14.2a6.6 6.6 0 010-4.3V7.1H2.1a11 11 0 000 9.9z"/><path fill="#EA4335" d="M12 5.4c1.6 0 3.1.6 4.2 1.7l3.2-3.2A11 11 0 002.1 7.1l3.7 2.8C6.7 7.3 9.1 5.4 12 5.4z"/></svg>';
 function renderAuth(){
-  const b = $('#authBtn'); if (!SB){ b.hidden = true; return; }
+  const b = $('#authBtn'); if (!SB){ b.hidden = true; $('#mypageBtn').hidden = true; $('#mypageEditBtn').hidden = true; return; }
   b.hidden = false;
-  if (sync.user){ b.textContent = '로그아웃'; b.title = sync.user.email || ''; }
+  const loggedIn = !!sync.user;
+  if (loggedIn){ b.textContent = '로그아웃'; b.title = sync.user.email || ''; }
   else { b.innerHTML = G_ICON + 'Google로 로그인'; b.title = ''; }
-  if (!sync.user) setSave('로그인하면 자동 저장돼요');
+  $('#mypageBtn').hidden = !loggedIn;
+  $('#mypageEditBtn').hidden = !loggedIn;
+  if (!loggedIn) setSave('로그인하면 자동 저장돼요');
 }
 async function signIn(){
   await SB.auth.signInWithOAuth({provider:'google', options:{redirectTo: location.origin + '/#edit'}});
@@ -1055,6 +1138,72 @@ async function saveNow(){
   sync.saving = false;
   if (sync.again){ sync.again = false; return saveNow(); }
   return ok;
+}
+
+/* 임시저장 */
+$('#saveDraft').addEventListener('click', async () => {
+  if (!SB) { toast('config.js에 서버 정보를 넣으면 저장할 수 있어요'); return; }
+  if (!sync.user) { openAuthModal('saveDraft'); return; }
+  const ok = await saveNow();
+  if (ok) toast('임시저장했어요');
+});
+
+/* 로그인 모달 */
+const authOverlay = $('#authOverlay');
+function openAuthModal(reason) {
+  if (reason) sessionStorage.setItem('postLogin', reason);
+  authOverlay.classList.add('show');
+}
+function closeAuthModal() { authOverlay.classList.remove('show'); }
+authOverlay.addEventListener('click', e => { if (e.target === authOverlay) closeAuthModal(); });
+$('#authModalClose').addEventListener('click', closeAuthModal);
+$('#authModalGoogle').addEventListener('click', () => { closeAuthModal(); signIn(); });
+
+/* 마이페이지 진입 */
+$('#mypageBtn').addEventListener('click', () => { location.hash = 'mypage'; });
+$('#mypageEditBtn').addEventListener('click', () => { location.hash = 'mypage'; });
+$('#mpNew').addEventListener('click', () => { location.hash = 'edit'; });
+$('#mpSignout').addEventListener('click', async () => {
+  await SB.auth.signOut(); sync.user = null; sync.invite = null;
+  renderAuth(); renderShare(); renderResponses([]);
+  location.hash = '';
+});
+
+/* 마이페이지: 초대장 목록 */
+async function loadMyPage() {
+  if (!SB || !sync.user) { location.hash = ''; return; }
+  $('#mpEmail').textContent = sync.user.email || '';
+  const { data } = await SB.from('invites')
+    .select('id, slug, published, data, tpl, tier, updated_at')
+    .eq('owner', sync.user.id)
+    .order('updated_at', { ascending: false });
+  renderDrafts(data || []);
+}
+function renderDrafts(rows) {
+  const grid = $('#draftGrid');
+  $('#draftsEmpty').hidden = rows.length > 0;
+  grid.innerHTML = rows.map(r => {
+    const d = r.data || {};
+    const date = d.date ? new Date(d.date).toLocaleDateString('ko-KR') : '날짜 미정';
+    const updated = new Date(r.updated_at).toLocaleDateString('ko-KR');
+    return `<button type="button" class="draft-card" data-id="${esc(r.id)}">
+      <div class="dc-title">${esc(d.name || '제목 없음')}</div>
+      <div class="dc-meta">
+        <span class="dc-badge ${r.published ? 'pub' : 'dft'}">${r.published ? '공개 중' : '임시저장'}</span>
+        <span>${esc(date)}</span>${d.place ? `<span>${esc(d.place)}</span>` : ''}
+      </div>
+      <div class="dc-meta">${esc(updated)} 수정</div>
+    </button>`;
+  }).join('');
+  grid.querySelectorAll('.draft-card').forEach(card => {
+    card.addEventListener('click', () => {
+      const row = rows.find(r => r.id === card.dataset.id);
+      if (!row) return;
+      sync.invite = { id: row.id, slug: row.slug, published: row.published };
+      applyData({ ...row.data, tpl: row.tpl, tier: row.tier });
+      location.hash = 'edit';
+    });
+  });
 }
 
 /* 공유 링크 발급 (결제는 연동 전: 지금은 바로 발급) */
@@ -1132,20 +1281,30 @@ async function connectHost(){
   sync.user = session ? session.user : null;
   renderAuth();
   if (!sync.user) return;
-  const {data} = await SB.from('invites').select('id, slug, published, data, tpl, tier').eq('owner', sync.user.id).order('updated_at', {ascending:false}).limit(1);
-  if (data && data[0]){ sync.invite = data[0]; applyData({...data[0].data, tpl: data[0].tpl, tier: data[0].tier}); setSave('저장됨'); }
-  else setSave('로그인됨 · 입력하면 자동 저장돼요');
+  // 로그인 직후 예약된 동작 처리
+  const postLogin = sessionStorage.getItem('postLogin');
+  if (postLogin) {
+    sessionStorage.removeItem('postLogin');
+    if (postLogin === 'saveDraft') { toast('로그인됐어요. 임시저장 중…'); saveNow(); }
+  }
+  if (!sync.invite) {
+    const {data} = await SB.from('invites').select('id, slug, published, data, tpl, tier').eq('owner', sync.user.id).order('updated_at', {ascending:false}).limit(1);
+    if (data && data[0]){ sync.invite = data[0]; applyData({...data[0].data, tpl: data[0].tpl, tier: data[0].tier}); setSave('저장됨'); }
+    else setSave('로그인됨 · 입력하면 자동 저장돼요');
+  }
   renderShare(); loadResponses();
   SB.auth.onAuthStateChange((_e, s) => { if (!s && sync.user){ sync.user = null; renderAuth(); } });
 }
 const connect = () => SLUG ? connectGuest() : connectHost();
 /* 화면 이동: (기본) 템플릿 선택 → #edit 편집 → #guest 참석자 화면(공유 링크) */
 function applyMode(){
-  const h = location.hash, guest = isGuestView(), edit = !guest && h === '#edit';
+  const h = location.hash, guest = isGuestView(), edit = !guest && h === '#edit', mypage = !guest && h === '#mypage';
   document.body.classList.toggle('guestmode', guest);
-  document.body.classList.toggle('mode-gallery', !guest && !edit);
+  document.body.classList.toggle('mode-gallery', !guest && !edit && !mypage);
+  document.body.classList.toggle('mode-mypage', mypage);
   if (guest){ document.body.classList.remove('fullpv'); scrollGuestTop(); play(); }
   else if (edit){ window.scrollTo(0, 0); if (matchMedia('(min-width:920px)').matches){ scrollGuestTop(); play(); } }
+  else if (mypage){ window.scrollTo(0, 0); loadMyPage(); }
   else { document.body.classList.remove('fullpv'); window.scrollTo(0, 0); }
 }
 
@@ -1191,6 +1350,7 @@ setTemplate('homeparty');
 render(); updateTotal();
 const fontsReady = document.fonts ? document.fonts.ready : Promise.resolve();
 if (isGuestView()) document.body.classList.add('guestmode');
+else if (location.hash === '#mypage') document.body.classList.add('mode-mypage');
 else if (location.hash !== '#edit') document.body.classList.add('mode-gallery');
 renderAuth();
 Promise.all([fontsReady, connect().catch(() => false)]).then(() => {
