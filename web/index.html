@@ -1,0 +1,1201 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>MOBILE INVITATION</title>
+<meta property="og:title" content="모바일 초대장이 도착했어요">
+<meta property="og:description" content="열어서 확인해 주세요">
+<meta property="og:image" content="/og.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Nanum+Gothic+Coding:wght@400;700&family=IBM+Plex+Mono:ital,wght@1,400;1,500&family=Noto+Sans+KR:wght@300;400;500;700;900&family=Gowun+Batang:wght@400;700&family=Cormorant+Garamond:ital,wght@1,500&family=Pinyon+Script&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script src="/config.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script src="https://t1.kakaocdn.net/kakao_js_sdk/2.7.2/kakao.min.js" crossorigin="anonymous"></script>
+<style>
+/* 레이아웃: 왼쪽 편집 패널 + 오른쪽 폰 미리보기 (모바일은 편집 → 전체화면 미리보기) */
+:root{
+  /* 편집 화면 (초대자용) */
+  --e-bg:#F6F3F4; --e-card:#FFFFFF; --e-ink:#1F1A1D; --e-sub:#6E6469; --e-line:#E5DEE1; --e-accent:#E0532F;
+  /* 초대장 테마 (참석자용) — 템플릿마다 이 값만 바뀜 */
+  --page:#FFD43B; --poster:#E8603C; --line:#FFD43B; --title:#FFFFFF;
+  --ink:#1C2B4D; --ink-soft:#44557A; --stamp:#E8603C; --rule:rgba(28,43,77,.35);
+  --display:'Black Han Sans','Noto Sans KR',sans-serif;
+  --mono:'Nanum Gothic Coding','IBM Plex Mono',monospace;
+  --sans:'Noto Sans KR',system-ui,sans-serif;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+[hidden]{display:none!important}
+html,body{background:var(--e-bg);color:var(--e-ink);font-family:var(--sans);color-scheme:light}
+button,input,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--e-accent);outline-offset:2px}
+
+/* ───────── 초대자 편집 화면 ───────── */
+.app{max-width:1120px;margin:0 auto;padding:24px 16px 120px;display:grid;gap:32px;grid-template-columns:minmax(0,1fr)}
+@media (min-width:920px){.app{grid-template-columns:minmax(0,1fr) 400px;align-items:start}}
+.app-head{display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin-bottom:18px}
+.app-head h1{font-size:22px;font-weight:900;letter-spacing:-.02em}
+.app-head span{font-size:13px;color:var(--e-sub)}
+.card{background:var(--e-card);border:1px solid var(--e-line);border-radius:14px;padding:20px;margin-bottom:14px}
+.card h2{font-size:15px;font-weight:700;margin-bottom:14px;display:flex;justify-content:space-between;align-items:baseline}
+.card h2 small{font-size:12px;font-weight:500;color:var(--e-sub)}
+.row{display:grid;gap:10px;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));margin-bottom:10px}
+.field{display:flex;flex-direction:column;gap:5px;min-width:0}
+.field label{font-size:12px;font-weight:500;color:var(--e-sub)}
+.field input,.field textarea{border:1px solid var(--e-line);border-radius:9px;padding:10px 12px;background:#FCFBFB;font-size:15px;width:100%}
+.field textarea{resize:vertical;min-height:72px;line-height:1.5}
+.field input:focus,.field textarea:focus{border-color:var(--e-accent);outline:none;background:#fff}
+.icon-btn{border:1px solid var(--e-line);background:#fff;border-radius:9px;color:var(--e-sub)}
+
+/* 연출 등급 · 옵션 (초대자에게만 보임) */
+.tiers{display:grid;gap:8px}
+.tier{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:12px;align-items:center;border:1.5px solid var(--e-line);border-radius:12px;padding:14px;cursor:pointer}
+.tier input{accent-color:var(--e-accent);width:18px;height:18px}
+.tier b{display:block;font-size:15px}
+.tier p{font-size:12.5px;color:var(--e-sub);margin-top:2px;line-height:1.45}
+.tier .price{font-weight:900;font-size:15px;white-space:nowrap}
+.tier:has(input:checked){border-color:var(--e-accent);background:#FFF4EE}
+.tier .badge{display:inline-block;font-size:10.5px;font-weight:700;color:#fff;background:var(--e-accent);border-radius:4px;padding:1px 6px;margin-left:6px;vertical-align:2px}
+.periods{display:flex;flex-wrap:wrap;gap:8px}
+.chip{border:1.5px solid var(--e-line);border-radius:999px;padding:8px 14px;font-size:13px;cursor:pointer;display:flex;gap:6px;align-items:center}
+.chip input{display:none}
+.chip:has(input:checked){border-color:var(--e-accent);color:var(--e-accent);font-weight:700}
+.total{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+.total strong{font-size:24px;font-weight:900;font-variant-numeric:tabular-nums}
+.pay{background:var(--e-ink);color:#fff;border:0;border-radius:11px;padding:14px 18px;font-weight:700;font-size:15px}
+.linkbox{margin-top:14px;display:none;gap:8px;align-items:center;background:#F3FBF6;border:1px solid #BFE5CC;border-radius:10px;padding:10px 12px;font-size:13px}
+.linkbox.show{display:flex}
+.linkbox code{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-family:var(--mono)}
+
+/* 미리보기 열 */
+.pv-col{position:sticky;top:20px}
+.pv-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;font-size:13px;color:var(--e-sub)}
+.pv-head button{border:1px solid var(--e-line);background:#fff;border-radius:999px;padding:6px 12px;font-size:12.5px;font-weight:700;color:var(--e-ink)}
+.phone{position:relative;height:min(800px,calc(100vh - 90px));border-radius:36px;border:10px solid #1F1A1D;overflow:hidden;background:#1F1A1D;box-shadow:0 20px 50px rgba(31,26,29,.18)}
+.mobile-pv{position:fixed;left:16px;right:16px;bottom:calc(16px + env(safe-area-inset-bottom,0px));z-index:20;display:flex;gap:8px}
+.mobile-pv button{flex:1;border:0;border-radius:12px;padding:15px;font-weight:700;font-size:15px;background:var(--e-ink);color:#fff;box-shadow:0 8px 24px rgba(0,0,0,.2)}
+@media (min-width:920px){.mobile-pv{display:none}}
+@media (max-width:919px){.pv-col .pv-head{display:none}.pv-col{position:static}.pv-col .phone{height:0;border:0;box-shadow:none;visibility:hidden}}
+
+/* 전체화면 미리보기 */
+.pv-bar{position:fixed;top:0;left:0;right:0;z-index:101;height:calc(50px + env(safe-area-inset-top,0px));padding:env(safe-area-inset-top,0px) 12px 0;
+  display:none;align-items:center;justify-content:space-between;background:#1F1A1D;color:#fff;font-size:13px}
+.pv-bar button{background:none;border:0;color:#fff;font-weight:700;padding:8px 6px}
+.pv-bar span{opacity:.7}
+body.fullpv .pv-bar{display:flex}
+body.fullpv .gframe{position:fixed;inset:calc(50px + env(safe-area-inset-top,0px)) 0 0 0;z-index:100;visibility:visible}
+body.fullpv{overflow:hidden}
+/* 공유 링크(#guest)로 열면 참석자 화면만 */
+body.guestmode{overflow:hidden}
+body.guestmode .app>div:first-child,body.guestmode .mobile-pv,body.guestmode .pv-head,body.guestmode .pv-bar{display:none!important}
+body.guestmode .gframe{position:fixed;inset:0;z-index:100;visibility:visible}
+.linkbox .open-guest{background:var(--e-ink);color:#fff;border:0;border-radius:8px;padding:7px 12px;font-size:12.5px;font-weight:700;white-space:nowrap}
+
+.toast{position:fixed;left:50%;bottom:90px;transform:translate(-50%,20px);background:#1F1A1D;color:#fff;font-size:13px;padding:10px 16px;border-radius:999px;opacity:0;transition:.25s;z-index:200;pointer-events:none;white-space:nowrap}
+.toast.show{opacity:1;transform:translate(-50%,0)}
+
+
+/* ───────── list 화면 (서비스 메인 + 템플릿 탐색) ───────── */
+.gallery{display:none;background:#FBF8F6;min-height:100vh}
+body.mode-gallery .gallery{display:block}
+body.mode-gallery .app,body.mode-gallery .mobile-pv{display:none!important}
+.promo{background:var(--e-accent);color:#fff;text-align:center;font-size:13px;font-weight:500;padding:9px 16px}
+.site-head{position:sticky;top:env(safe-area-inset-top,0px);z-index:30;display:flex;align-items:center;gap:20px;padding:14px max(16px,calc((100% - 1120px)/2));background:rgba(251,248,246,.92);backdrop-filter:blur(10px);border-bottom:1px solid var(--e-line)}
+.logo{font-family:'IBM Plex Mono',monospace;font-size:13px;letter-spacing:.14em;color:var(--e-ink);text-decoration:none;white-space:nowrap}
+.logo b{font-weight:500;color:var(--e-accent)}
+.site-nav{display:flex;gap:18px;margin-left:auto}
+.site-nav a{font-size:14px;font-weight:500;color:var(--e-sub);text-decoration:none}
+.site-nav a:hover{color:var(--e-ink)}
+.head-cta{background:var(--e-ink);color:#fff;text-decoration:none;font-size:13.5px;font-weight:700;padding:9px 16px;border-radius:999px;white-space:nowrap}
+@media (max-width:640px){.site-nav{display:none}.head-cta{margin-left:auto}}
+
+.hero{background:#1F2A47;color:#fff;overflow:hidden}
+.hero-inner{max-width:1120px;margin:0 auto;padding:44px 16px 40px;display:grid;gap:28px;grid-template-columns:minmax(0,1fr)}
+@media (min-width:860px){.hero-inner{grid-template-columns:minmax(0,1.15fr) minmax(0,.85fr);align-items:center;padding:64px 16px}}
+.hero h1{font-size:clamp(30px,5.4vw,52px);font-weight:900;line-height:1.15;letter-spacing:-.03em;text-wrap:balance}
+.hero-copy>p{margin-top:14px;font-size:15px;line-height:1.7;color:rgba(255,255,255,.75);max-width:30em}
+.cats{display:flex;gap:8px;margin-top:26px;overflow-x:auto;padding-bottom:6px;scrollbar-width:none}
+@media (min-width:860px){.cats{flex-wrap:wrap;overflow:visible}}
+.cats::-webkit-scrollbar{display:none}
+.cat{display:flex;align-items:center;gap:8px;flex:none;background:#fff;color:var(--e-ink);border:0;border-radius:10px;padding:7px 12px 7px 7px;font-size:13.5px;font-weight:700}
+.cat:hover{transform:translateY(-1px);box-shadow:0 6px 14px rgba(0,0,0,.2)}
+.cat-ic{width:30px;height:30px;border-radius:7px;display:grid;place-items:center;color:#1F2A47}
+.cat-ic svg{width:18px;height:18px}
+.hero-art{position:relative;height:300px;max-width:100%}
+@media (min-width:860px){.hero-art{height:400px}}
+.hero-card{position:absolute;top:50%;left:50%;width:min(200px,46vw);aspect-ratio:3/4;box-shadow:0 18px 40px rgba(0,0,0,.4)}
+@media (min-width:860px){.hero-card{width:230px}}
+.hc-back{transform:translate(-18%,-56%) rotate(9deg)}
+.hc-front{transform:translate(-82%,-44%) rotate(-7deg)}
+.hero-card>*{width:100%;height:100%}
+.hero-spark{position:absolute;color:#FFD43B;font-size:20px;animation:spark 2.4s ease-in-out infinite}
+.hero-spark.s1{left:14%;top:12%}.hero-spark.s2{right:12%;top:20%;animation-delay:.8s;font-size:14px}.hero-spark.s3{left:58%;bottom:6%;animation-delay:1.5s}
+@keyframes spark{0%,100%{opacity:.2;transform:scale(.7)}50%{opacity:1;transform:scale(1.15)}}
+@media (prefers-reduced-motion:reduce){.hero-spark{animation:none}}
+
+.sec{max-width:1120px;margin:0 auto;padding:52px 16px 8px}
+.sec-head{display:flex;align-items:baseline;gap:10px;margin-bottom:16px}
+.sec-head h2{font-size:24px;font-weight:900;letter-spacing:-.02em}
+.sec-head span{font-size:13px;color:var(--e-sub)}
+.sec-lead{font-size:14.5px;color:var(--e-sub);margin:-6px 0 20px;line-height:1.6}
+.filters{display:flex;gap:6px;overflow-x:auto;padding-bottom:4px;margin-bottom:20px;scrollbar-width:none}
+.filters::-webkit-scrollbar{display:none}
+.flt{flex:none;border:1px solid var(--e-line);background:#fff;border-radius:999px;padding:7px 14px;font-size:13px;font-weight:500;color:var(--e-sub)}
+.flt.on{background:var(--e-ink);border-color:var(--e-ink);color:#fff;font-weight:700}
+.empty{font-size:14px;color:var(--e-sub);padding:24px 0}
+.tpl-grid{display:grid;gap:22px 16px;grid-template-columns:repeat(2,minmax(0,1fr))}
+@media (min-width:860px){.tpl-grid{grid-template-columns:repeat(4,minmax(0,1fr))}}
+.tpl{display:flex;flex-direction:column;gap:12px;text-align:left;background:none;border:0;padding:0;color:inherit;min-width:0}
+.tpl-frame{position:relative;border-radius:14px;padding:12%;aspect-ratio:4/5;max-width:100%;display:grid;place-items:center;overflow:hidden;transition:transform .25s ease,box-shadow .25s ease}
+.tpl:not([disabled]) .tpl-frame{background:#FFD43B}
+.tpl:not([disabled]):hover .tpl-frame,.tpl:not([disabled]):focus-visible .tpl-frame{transform:translateY(-4px);box-shadow:0 14px 30px rgba(28,43,77,.18)}
+.tpl:not([disabled]):hover .thumb{transform:rotate(-2deg) scale(1.03)}
+.tpl-info b{display:block;font-size:15px;font-weight:700}
+.tpl-info span{display:block;font-size:12.5px;color:var(--e-sub);margin-top:3px}
+.tpl-tags{display:flex;flex-wrap:wrap;gap:5px;margin-top:8px}
+.tpl-tags i{font-style:normal;font-size:11px;font-weight:700;border-radius:999px;padding:3px 8px;background:#fff;border:1px solid var(--e-line);color:var(--e-sub)}
+.tpl-tags i.hot{background:var(--e-accent);border-color:var(--e-accent);color:#fff}
+.thumb{position:relative;width:100%;aspect-ratio:3/4;background:var(--poster);overflow:hidden;container-type:inline-size;transition:transform .3s ease;box-shadow:0 6px 14px rgba(28,43,77,.18)}
+.thumb .t-top{position:absolute;top:5cqw;left:6cqw;right:6cqw;display:flex;justify-content:space-between;font-family:var(--display);font-size:6.5cqw;color:var(--title)}
+.thumb svg.t-rib{position:absolute;left:4%;top:6%;width:92%;height:90%}
+.thumb svg.t-rib path{fill:none;stroke:var(--line);stroke-width:13;stroke-linecap:round;stroke-linejoin:round}
+.thumb .t-title{position:absolute;left:0;right:0;top:44%;text-align:center;font-family:var(--display);color:var(--title);font-size:21cqw;line-height:.98}
+.thumb .t-st{position:absolute;width:11cqw;height:11cqw}
+.tpl[disabled]{cursor:default}
+.tpl[disabled] .tpl-frame{background:repeating-linear-gradient(135deg,#EFEAEC 0 10px,#F4F0F2 10px 20px);border:1.5px dashed #D9D0D4}
+.tpl[disabled] .ph{width:100%;aspect-ratio:3/4;border:1.5px dashed #CFC5CA;border-radius:4px;display:grid;place-items:center;font-size:12px;font-weight:700;color:#A79BA1;background:rgba(255,255,255,.5)}
+.tpl[disabled] .tpl-info b,.tpl[disabled] .tpl-info span{color:#A79BA1}
+
+.fx-grid{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(220px,1fr))}
+.fx{background:#fff;border:1px solid var(--e-line);border-radius:14px;padding:20px}
+.fx b{display:block;font-size:17px;margin-top:10px}
+.fx p{font-size:13.5px;color:var(--e-sub);line-height:1.6;margin-top:6px}
+.fx-price{display:inline-block;font-size:12px;font-weight:900;color:var(--e-accent)}
+.fx-hot{background:#1F2A47;border-color:#1F2A47;color:#fff}
+.fx-hot p{color:rgba(255,255,255,.72)}.fx-hot .fx-price{color:#FFD43B}
+.steps{list-style:none;counter-reset:st;display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(220px,1fr))}
+.steps li{counter-increment:st;padding:18px 0 0;border-top:2px solid var(--e-ink)}
+.steps li::before{content:counter(st);font-family:'IBM Plex Mono',monospace;font-size:13px;color:var(--e-accent);font-weight:500}
+.steps b{display:block;font-size:16px;margin-top:6px}
+.steps p{font-size:13.5px;color:var(--e-sub);margin-top:4px;line-height:1.6}
+.perks{list-style:none;display:flex;flex-wrap:wrap;gap:8px;margin-top:26px}
+.perks li{font-size:13px;font-weight:500;background:#fff;border:1px solid var(--e-line);border-radius:999px;padding:7px 14px}
+.site-foot{max-width:1120px;margin:56px auto 0;padding:24px 16px 48px;border-top:1px solid var(--e-line);display:flex;flex-wrap:wrap;gap:8px 20px;justify-content:space-between;font-size:12.5px;color:var(--e-sub)}
+.back-link{display:inline-flex;align-items:center;gap:4px;border:0;background:none;font-size:13px;font-weight:700;color:var(--e-sub);padding:0;margin-bottom:10px}
+.back-link:hover{color:var(--e-ink)}
+
+
+/* ───────── 템플릿 2: 와인 파티 ───────── */
+.gframe[data-tpl="wine"]{--page:#E3B98F;--ink:#3A1E14;--ink-soft:#7A4A36;--stamp:#D88C9A;--rule:rgba(58,30,20,.35);--display:'Gowun Batang','Noto Sans KR',serif;--mono:'Gowun Batang','Noto Sans KR',serif}
+.gframe[data-tpl="wine"] #art,.gframe[data-tpl="wine"] #gift{display:none!important}
+.gframe:not([data-tpl="wine"]) #artWine{display:none}
+.gframe[data-tpl="wine"] .event-name{font-weight:400;font-size:36px;letter-spacing:.02em}
+.gframe[data-tpl="wine"] .label{font-family:'Cormorant Garamond',serif;font-style:italic;font-weight:500;font-size:17px;letter-spacing:0;text-transform:lowercase;margin-bottom:6px}
+.gframe[data-tpl="wine"] .label::first-letter{text-transform:uppercase}
+.gframe[data-tpl="wine"] .mono{font-size:15px;letter-spacing:.08em}
+.gframe[data-tpl="wine"] .rsvp-q,.gframe[data-tpl="wine"] .guest-count{font-weight:400}
+.gframe[data-tpl="wine"] .dday{font-weight:700;font-size:18px;padding:5px 14px}
+.gframe[data-tpl="wine"] .g-stamp{border-color:transparent;box-shadow:0 8px 18px rgba(58,30,20,.25);font-weight:700;font-size:17px;letter-spacing:.06em}
+.gframe[data-tpl="wine"] .rsvp-btns button.yes{font-weight:700;font-size:16px}
+.art-wine{position:absolute;inset:0;container-type:inline-size}
+.art-wine svg,.thumb-wine svg{position:absolute;inset:0;width:100%;height:100%}
+.w-title{position:absolute;left:0;right:0;top:52%;text-align:center;color:#fff;pointer-events:none}
+.w-title .w1{display:block;font-family:'Pinyon Script','Gowun Batang',cursive;font-size:13cqw;line-height:1;margin-bottom:-2cqw;text-shadow:0 2px 10px rgba(120,20,50,.3)}
+.w-title .w2{display:block;font-family:'Pinyon Script','Gowun Batang',cursive;font-size:30cqw;line-height:1.05;letter-spacing:0;text-shadow:0 3px 14px rgba(120,20,50,.3)}
+.w-title .ch{display:inline-block}
+.thumb-wine{position:relative;width:100%;aspect-ratio:3/4;overflow:hidden;container-type:inline-size;transition:transform .3s ease;box-shadow:0 6px 14px rgba(58,30,20,.2)}
+.tpl:not([disabled]):hover .thumb-wine{transform:rotate(-2deg) scale(1.03)}
+
+
+/* 와인 1,000원: 커튼이 양옆으로 걷힘 */
+.curtain{position:absolute;inset:0;z-index:5;display:none;overflow:hidden;pointer-events:none}
+.cur{position:absolute;top:0;bottom:0;width:51%;
+  background:linear-gradient(180deg,rgba(0,0,0,.18),transparent 18%,transparent 82%,rgba(0,0,0,.25)),
+    repeating-linear-gradient(90deg,#6E0C2B 0,#9C1A3F 3.5%,#C8304F 6%,#9C1A3F 8.5%,#6E0C2B 12%);
+  box-shadow:inset 0 -6px 0 #D9A441,inset 0 -9px 0 rgba(0,0,0,.25)}
+.cur-l{left:0;transform-origin:0 0;box-shadow:inset 0 -6px 0 #D9A441,inset -10px 0 18px rgba(0,0,0,.35)}
+.cur-r{right:0;transform-origin:100% 0;box-shadow:inset 0 -6px 0 #D9A441,inset 10px 0 18px rgba(0,0,0,.35)}
+.cur-top{position:absolute;left:-2%;right:-2%;top:0;height:13%;z-index:2;
+  background:linear-gradient(180deg,#5E0A25,#8E1739 70%,#6E0C2B);
+  -webkit-mask:radial-gradient(circle at 50% 100%,transparent 0 9%,#000 9.5%) 0 0/20% 100% repeat-x;
+          mask:radial-gradient(circle at 50% 100%,transparent 0 9%,#000 9.5%) 0 0/20% 100% repeat-x;
+  filter:drop-shadow(0 3px 4px rgba(0,0,0,.35))}
+.cur-top::after{content:"";position:absolute;left:0;right:0;top:18%;height:5%;background:#D9A441;opacity:.9}
+
+/* 로그인 · 공유 링크 · 받은 응답 */
+.auth-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.auth-btn{border:1px solid var(--e-line);background:#fff;border-radius:999px;padding:7px 14px;font-size:13px;font-weight:700;display:inline-flex;align-items:center;gap:6px}
+.auth-btn svg{width:16px;height:16px}
+.share{margin-top:14px;display:none;flex-direction:column;gap:8px}
+.share.show{display:flex}
+.share-url{display:flex;gap:6px}
+.share-url input{flex:1;min-width:0;border:1px solid #BFE5CC;background:#F3FBF6;border-radius:9px;padding:10px 12px;font-family:var(--mono);font-size:13px}
+.share-url button,.share-btns button,.share-btns a{border:1px solid var(--e-line);background:#fff;border-radius:9px;padding:9px 12px;font-size:13px;font-weight:700;white-space:nowrap;color:var(--e-ink);text-decoration:none}
+.share-btns{display:flex;gap:6px;flex-wrap:wrap}
+.share-btns .kakao{background:#FEE500;border-color:#FEE500;color:#191919}
+.share small{font-size:12px;color:var(--e-sub)}
+.resp-list{list-style:none;display:grid;gap:6px;font-size:14px}
+.resp-list li{display:flex;justify-content:space-between;border-bottom:1px solid var(--e-line);padding:6px 0}
+.resp-list .yes{color:#1E8A4C;font-weight:700}.resp-list .no{color:var(--e-sub)}
+.resp-empty{font-size:13px;color:var(--e-sub)}
+.expired{position:absolute;inset:0;z-index:20;display:none;place-items:center;text-align:center;background:var(--page);padding:24px}
+.expired.show{display:grid}
+.expired b{display:block;font-family:var(--display);font-size:26px;margin-bottom:8px}
+.expired p{font-family:var(--mono);font-size:14px;color:var(--ink-soft)}
+
+/* ───────── 참석자용 화면 (공유 링크로 열리는 화면) ───────── */
+.gframe{position:absolute;inset:0;overflow:hidden;background:#FFF4EC;font-family:var(--sans);color:var(--ink);word-break:keep-all}
+.g-bg{position:absolute;inset:0;background:var(--page);clip-path:circle(150% at 50% 30%)}
+.g-scroll{position:absolute;inset:0;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch}
+.g-page{position:relative;max-width:430px;margin:0 auto;padding:28px 0 130px}
+.g-brand{font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.14em;padding:0 24px 14px}
+.g-brand b{font-weight:500}
+
+.g-tabs{position:absolute;top:0;left:0;right:0;z-index:8;display:flex;justify-content:center;gap:36px;padding-top:14px;background:var(--page);border-bottom:1px solid var(--rule);transform:translateY(-100%);transition:transform .3s ease}
+.g-tabs.show{transform:none}
+.g-tabs button{background:none;border:0;font-size:14px;font-weight:700;color:var(--ink);padding:0 0 12px;border-bottom:3px solid transparent}
+.g-tabs button.on{border-color:var(--ink)}
+
+.poster-wrap{padding:0 24px}
+.poster{position:relative;aspect-ratio:3/4;max-width:100%;cursor:pointer;user-select:none}
+.poster-inner{position:absolute;inset:0;background:var(--poster);overflow:hidden}
+.art{position:absolute;inset:0}
+.poster-top{position:absolute;top:14px;left:16px;right:16px;display:flex;justify-content:space-between;font-family:var(--display);font-size:15px;color:var(--title);letter-spacing:.04em}
+.ribbon{position:absolute;left:4%;top:6%;width:92%;height:90%}
+.ribbon path{fill:none;stroke:var(--line);stroke-width:13;stroke-linecap:round;stroke-linejoin:round}
+.title{position:absolute;left:0;right:0;top:44%;text-align:center;font-family:var(--display);color:var(--title);font-size:min(17vw,76px);line-height:.98;text-shadow:0 3px 0 rgba(0,0,0,.08)}
+.title .ch{display:inline-block}
+.sticker{position:absolute;width:34px;height:34px}
+.glint{position:absolute;color:#fff;font-size:12px;line-height:10px;opacity:0;pointer-events:none}
+canvas.glitter{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:6}
+
+.gift{position:absolute;inset:0;z-index:5;display:none}
+.front{position:absolute;left:0;right:0;top:19%;bottom:0;
+  background:radial-gradient(circle,rgba(232,96,60,.2) 3px,transparent 3.5px) 0 0/22px 22px,linear-gradient(180deg,#FFF6EF,#F7E4DA);
+  box-shadow:inset 0 10px 18px rgba(120,40,30,.12)}
+.lid{position:absolute;left:-4%;right:-4%;top:0;height:21%;border-radius:4px;
+  background:radial-gradient(circle,rgba(232,96,60,.2) 3px,transparent 3.5px) 6px 6px/22px 22px,linear-gradient(180deg,#FFFBF7,#F1DDD2);
+  box-shadow:0 8px 14px rgba(90,20,30,.22)}
+.band{position:absolute;background:linear-gradient(90deg,#E9A800,#FFCC1F 35%,#FFE680 50%,#FFCC1F 65%,#E9A800)}
+.band-v{top:-1%;bottom:0;left:50%;width:13%}
+.band-h{left:-4%;right:-4%;top:55%;height:9%;background:linear-gradient(180deg,#E9A800,#FFCC1F 35%,#FFE680 50%,#FFCC1F 65%,#E9A800)}
+.bow{position:absolute;left:30%;width:40%;top:-11%;overflow:visible}
+.bow path{fill:none;stroke:#FFC61A;stroke-width:13;stroke-linecap:round;stroke-linejoin:round}
+.bow .loop-hi{stroke:#FFF1A8;stroke-width:4}
+.bow circle{fill:#E9A800}
+.hint{text-align:center;font-size:11px;color:var(--ink-soft);margin-top:10px;font-family:var(--mono)}
+
+.event-name{font-family:var(--display);font-weight:400;font-size:38px;line-height:1.08;text-align:center;padding:30px 24px 0;text-wrap:balance;white-space:pre-line}
+.block{text-align:center;padding:24px}
+.rule{height:1px;background:var(--rule);margin:0 24px}
+.label{font-size:11px;font-weight:900;letter-spacing:.32em;margin-bottom:12px}
+.mono{font-family:var(--mono);font-size:15px;line-height:1.9;white-space:pre-line}
+.mono i{font-family:'IBM Plex Mono',var(--mono);font-style:italic}
+.u{display:inline-block;border-bottom:1px solid var(--ink);padding-bottom:1px}
+.dday{display:inline-block;margin-top:12px;font-family:var(--display);font-size:22px;letter-spacing:.04em;background:var(--ink);color:var(--page);padding:4px 14px 2px}
+.g-btn{display:inline-block;border:1.5px solid var(--ink);background:none;color:var(--ink);font-weight:700;font-size:14px;padding:11px 20px;margin-top:14px}
+
+/* 참석 응답 블록 */
+.rsvp-q{font-family:var(--display);font-size:26px;margin-bottom:16px}
+.rsvp-form{display:flex;flex-direction:column;gap:10px;max-width:300px;margin:0 auto}
+.rsvp-form input{border:0;border-bottom:1.5px solid var(--ink);background:transparent;text-align:center;font-family:var(--mono);font-size:16px;padding:8px;color:var(--ink)}
+.rsvp-form input::placeholder{color:var(--ink-soft);opacity:.7}
+.rsvp-form input:focus{outline:none;border-bottom-width:2.5px}
+.rsvp-btns{display:flex;gap:8px}
+.rsvp-btns button{flex:1;border:1.5px solid var(--ink);background:none;color:var(--ink);font-weight:700;font-size:15px;padding:13px 0}
+.rsvp-btns button.yes{background:var(--stamp);border-color:var(--stamp);color:#fff;font-family:var(--display);font-weight:400;font-size:18px;letter-spacing:.04em}
+.rsvp-err{font-size:12px;color:var(--stamp);min-height:16px}
+.rsvp-done{display:none}
+.rsvp-done p{font-family:var(--mono);font-size:15px;line-height:1.8;white-space:pre-line}
+.rsvp-done button{background:none;border:0;text-decoration:underline;color:var(--ink-soft);font-size:13px;margin-top:6px}
+.answered .rsvp-form{display:none}.answered .rsvp-done{display:block}
+
+.guest-count{font-family:var(--display);font-size:28px}
+.guest-sub{font-size:11px;letter-spacing:.3em;font-weight:700;color:var(--ink-soft);margin-top:6px}
+
+/* 하단 고정 CTA: 배경과 분리되는 페이드 + 단색 버튼 */
+.g-cta{position:absolute;left:0;right:0;bottom:0;z-index:7;padding:28px 20px calc(18px + env(safe-area-inset-bottom,0px));
+  background:linear-gradient(to top,var(--page) 55%,transparent);pointer-events:none;transition:opacity .25s,transform .25s}
+.g-stamp{pointer-events:auto;display:flex;align-items:center;justify-content:center;gap:10px;width:100%;max-width:390px;margin:0 auto;height:56px;
+  border:2px solid var(--ink);background:var(--stamp);color:#fff;font-family:var(--display);font-size:20px;letter-spacing:.03em;
+  box-shadow:4px 4px 0 var(--ink);transition:transform .12s,box-shadow .12s}
+.g-stamp svg{width:20px;height:20px}
+.g-stamp:active{transform:translate(3px,3px);box-shadow:1px 1px 0 var(--ink)}
+.g-cta.hide{opacity:0;transform:translateY(16px);pointer-events:none}
+.g-cta.hide .g-stamp{pointer-events:none}
+
+.g-sheet-bg{position:absolute;inset:0;z-index:9;background:rgba(0,0,0,.35);opacity:0;pointer-events:none;transition:opacity .25s}
+.g-sheet{position:absolute;left:0;right:0;bottom:0;z-index:10;background:#FFF4EC;border-radius:18px 18px 0 0;padding:22px 20px 28px;transform:translateY(100%);transition:transform .3s ease;text-align:center}
+.sheet-open .g-sheet-bg{opacity:1;pointer-events:auto}.sheet-open .g-sheet{transform:none}
+.g-sheet h3{font-family:var(--display);font-weight:400;font-size:20px;margin-bottom:4px}
+.g-sheet .addr{font-family:var(--mono);font-size:13px;color:var(--ink-soft);margin-bottom:16px}
+.maps{display:grid;gap:8px}
+.maps a{display:flex;align-items:center;justify-content:center;gap:10px;border:1.5px solid var(--ink);color:var(--ink);text-decoration:none;font-weight:700;padding:13px}
+.maps a i{width:22px;height:22px;border-radius:6px;font-style:normal;font-size:12px;font-weight:900;display:grid;place-items:center;color:#fff}
+.g-sheet .copy{margin-top:10px;background:none;border:0;color:var(--ink-soft);font-size:13px;text-decoration:underline}
+
+@media (prefers-reduced-motion:reduce){.g-tabs,.g-sheet,.g-sheet-bg{transition:none}}
+</style>
+</head>
+<body>
+
+<section class="gallery" id="gallery">
+  <!-- list 화면: 서비스 메인 겸 템플릿 탐색 -->
+  <div class="promo">기본 초대장은 무료 · 선물상자, 커튼 연출은 1,000원부터</div>
+  <header class="site-head">
+    <a class="logo" href="#" aria-label="MOBILE INVITATION 홈">MOBILE <b>INVITATION</b></a>
+    <nav class="site-nav" aria-label="주요 메뉴">
+      <a href="#templates">템플릿</a><a href="#effects">오프닝 연출</a><a href="#how">만드는 법</a>
+    </nav>
+    <a class="head-cta" href="#templates">만들기</a>
+  </header>
+
+  <section class="hero">
+    <div class="hero-inner">
+      <div class="hero-copy">
+        <h1>열어보는 순간이<br>기억되는 초대장</h1>
+        <p>포스터 한 장에 날짜, 장소, 참석 응답까지. 링크를 연 사람 앞에서 리본이 풀리고 커튼이 걷혀요.</p>
+        <div class="cats" role="list"><button type="button" class="cat" data-cat="party"><span class="cat-ic" style="background:#FFE27A"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20l4-12 8 8z"/><path d="M14 4l1 2M19 6l-2 1M18 11l2 1"/></svg></span>홈파티</button><button type="button" class="cat" data-cat="birthday"><span class="cat-ic" style="background:#FFC9D6"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 20h14v-7H5z"/><path d="M5 15c2 1.5 4-1 7 0s5-1.5 7 0"/><path d="M12 9V6"/><path d="M12 4.5l.01 0"/></svg></span>생일</button><button type="button" class="cat" data-cat="wine"><span class="cat-ic" style="background:#F3C0C8"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 3h8v5a4 4 0 01-8 0z"/><path d="M12 12v8M8.5 20h7"/></svg></span>와인·술자리</button><button type="button" class="cat" data-cat="brunch"><span class="cat-ic" style="background:#FFDDB5"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12h13a3 3 0 010 6H4z"/><path d="M8 4c0 2 2 2 2 4M12 4c0 2 2 2 2 4"/></svg></span>브런치</button><button type="button" class="cat" data-cat="yearend"><span class="cat-ic" style="background:#CFE3FF"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l2.5 5 5.5.8-4 3.9.9 5.5L12 15.6 7.1 18.2 8 12.7 4 8.8 9.5 8z"/></svg></span>송년회</button><button type="button" class="cat" data-cat="house"><span class="cat-ic" style="background:#D8F0D2"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 11l8-7 8 7"/><path d="M6 10v10h12V10"/><path d="M10 20v-6h4v6"/></svg></span>집들이</button><button type="button" class="cat" data-cat="dol"><span class="cat-ic" style="background:#E6DAFF"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="9" r="5"/><path d="M8 20c1-3 7-3 8 0"/></svg></span>돌잔치</button></div>
+      </div>
+      <div class="hero-art" aria-hidden="true">
+        <div class="hero-card hc-back" id="heroWine"></div>
+        <div class="hero-card hc-front" id="heroHome"></div>
+        <span class="hero-spark s1">✦</span><span class="hero-spark s2">✦</span><span class="hero-spark s3">✦</span>
+      </div>
+    </div>
+  </section>
+
+  <section class="sec" id="templates">
+    <div class="sec-head"><h2>템플릿</h2><span id="tplCount"></span></div>
+    <div class="filters" role="group" aria-label="모임 종류로 거르기"><button type="button" class="flt on" data-filter="all">전체</button><button type="button" class="flt" data-filter="party">홈파티</button><button type="button" class="flt" data-filter="birthday">생일</button><button type="button" class="flt" data-filter="wine">와인·술자리</button><button type="button" class="flt" data-filter="brunch">브런치</button><button type="button" class="flt" data-filter="yearend">송년회</button><button type="button" class="flt" data-filter="house">집들이</button><button type="button" class="flt" data-filter="dol">돌잔치</button></div>
+    <div class="tpl-grid">
+    <button class="tpl" type="button" data-tpl="homeparty" data-cats="party birthday house" aria-label="홈파티 포스터 템플릿 선택">
+      <div class="tpl-frame">
+        <div class="thumb" aria-hidden="true">
+          <div class="t-top"><span>피자</span><span>와인</span><span>보드게임</span></div>
+          <svg class="t-rib" viewBox="0 0 300 330"><path d="M150 150 C 96 70, 22 78, 40 132 C 56 180, 122 172, 150 150 C 178 172, 244 180, 260 132 C 278 78, 204 70, 150 150 M150 150 C 128 196, 96 222, 70 300 M150 150 C 172 196, 204 222, 236 300 M150 150 C 140 210, 160 250, 150 318"/></svg>
+          <div class="t-title">금요일 밤<br>홈파티</div>
+          <svg class="t-st" style="left:68%;top:10%" viewBox="0 0 40 40"><circle cx="20" cy="20" r="15" fill="#8ED8F8" stroke="#fff" stroke-width="3"/></svg>
+          <svg class="t-st" style="left:20%;top:23%" viewBox="0 0 40 40"><path d="M20 3l5 11 12 1-9 8 3 12-11-6-11 6 3-12-9-8 12-1z" fill="#FFD84D" stroke="#fff" stroke-width="2.5" stroke-linejoin="round"/></svg>
+          <svg class="t-st" style="left:9%;top:52%" viewBox="0 0 40 40"><path d="M20 35S4 25 4 14a8 8 0 0116-3 8 8 0 0116 3c0 11-16 21-16 21z" fill="#FF7FB0" stroke="#fff" stroke-width="2.5"/></svg>
+          <svg class="t-st" style="left:79%;top:62%" viewBox="0 0 40 40"><path d="M8 14l6-8h12l6 8-12 20z" fill="#C9B6FF" stroke="#fff" stroke-width="2.5" stroke-linejoin="round"/></svg>
+        </div>
+      </div>
+      <div class="tpl-info"><b>홈파티 포스터</b><span>생일, 집들이, 모임 어디에나</span><div class="tpl-tags"><i class="hot">선물상자 연출</i><i>무료부터</i></div></div>
+    </button>
+    <button class="tpl" type="button" data-tpl="wine" data-cats="party wine brunch yearend" aria-label="와인 파티 템플릿 선택">
+      <div class="tpl-frame" style="background:#E3B98F">
+        <div class="thumb-wine" aria-hidden="true"><div id="wineThumb" style="position:absolute;inset:0"></div>
+          <div class="w-title"><span class="w1">Wine &amp;</span><span class="w2">Party</span></div></div>
+      </div>
+      <div class="tpl-info"><b>와인 파티</b><span>와인 모임, 브런치, 송년회</span><div class="tpl-tags"><i class="hot">커튼 &amp; 건배 연출</i><i>무료부터</i></div></div>
+    </button>
+    <button class="tpl" type="button" disabled data-cats="birthday dol" aria-label="템플릿 3, 준비 중">
+      <div class="tpl-frame"><div class="ph">준비 중</div></div>
+      <div class="tpl-info"><b>템플릿 3</b><span>준비 중인 디자인</span><div class="tpl-tags"><i>곧 추가돼요</i></div></div>
+    </button>
+    <button class="tpl" type="button" disabled data-cats="yearend house" aria-label="템플릿 4, 준비 중">
+      <div class="tpl-frame"><div class="ph">준비 중</div></div>
+      <div class="tpl-info"><b>템플릿 4</b><span>준비 중인 디자인</span><div class="tpl-tags"><i>곧 추가돼요</i></div></div>
+    </button>
+    </div>
+    <p class="empty" id="tplEmpty" hidden>이 모임에 맞는 템플릿을 준비하고 있어요.</p>
+  </section>
+
+  <section class="sec effects" id="effects">
+    <div class="sec-head"><h2>오프닝 연출</h2></div>
+    <p class="sec-lead">초대장을 연 사람이 가장 먼저 보는 장면이에요. 템플릿마다 고를 수 있어요.</p>
+    <div class="fx-grid">
+      <div class="fx"><span class="fx-price">무료</span><b>기본</b><p>포스터가 부드럽게 나타나요.</p></div>
+      <div class="fx"><span class="fx-price">500원</span><b>반짝 · 찰랑</b><p>제목 글자가 튀어 오르고, 스티커가 반짝이거나 와인이 찰랑여요.</p></div>
+      <div class="fx fx-hot"><span class="fx-price">1,000원</span><b>선물상자 · 커튼</b><p>리본을 풀어 상자를 열거나, 커튼이 걷히며 포스터가 나타나요.</p></div>
+    </div>
+  </section>
+
+  <section class="sec" id="how">
+    <div class="sec-head"><h2>만드는 법</h2></div>
+    <ol class="steps">
+      <li><b>템플릿 고르기</b><p>모임에 맞는 포스터를 골라요.</p></li>
+      <li><b>내용 입력</b><p>날짜, 장소, 초대 문구를 쓰면 미리보기에 바로 보여요.</p></li>
+      <li><b>링크 공유</b><p>카카오톡으로 보내고 참석 응답을 한곳에서 확인해요.</p></li>
+    </ol>
+    <ul class="perks">
+      <li>참석 응답 모아보기</li><li>지도앱으로 바로 길찾기</li><li>공개 기간 관리</li><li>광고 없음</li>
+    </ul>
+  </section>
+
+  <footer class="site-foot"><span class="logo">MOBILE <b>INVITATION</b></span><span>결제는 연동 전이라 지금은 공유 링크가 무료로 발급돼요.</span></footer>
+</section>
+
+<div class="app">
+  <!-- ───────── 편집 패널 ───────── -->
+  <div>
+    <button type="button" class="back-link" id="backToGallery">← 템플릿 다시 고르기</button>
+    <div class="app-head"><h1>초대장 만들기</h1><div class="auth-row"><span id="saveState">이 화면에서만 미리보기</span><button type="button" class="auth-btn" id="authBtn" hidden></button></div></div>
+
+    <section class="card">
+      <h2>포스터</h2>
+      <div class="row">
+        <div class="field"><label for="f-t1">포스터 제목 1줄</label><input id="f-t1" value="금요일 밤" maxlength="10"></div>
+        <div class="field"><label for="f-t2">포스터 제목 2줄</label><input id="f-t2" value="홈파티" maxlength="10"></div>
+      </div>
+      <div class="row" id="wordsRow">
+        <div class="field"><label for="f-w1">상단 문구 1</label><input id="f-w1" value="피자" maxlength="6"></div>
+        <div class="field"><label for="f-w2">상단 문구 2</label><input id="f-w2" value="와인" maxlength="6"></div>
+        <div class="field"><label for="f-w3">상단 문구 3</label><input id="f-w3" value="보드게임" maxlength="6"></div>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>기본 정보</h2>
+      <div class="row">
+        <div class="field"><label for="f-name">행사 이름</label><input id="f-name" value="헤이미네 금요일 홈파티"></div>
+        <div class="field"><label for="f-host">초대하는 사람</label><input id="f-host" value="헤이미"></div>
+      </div>
+      <div class="field"><label for="f-msg">초대 문구</label><textarea id="f-msg">맛있는 피자와 와인 준비해둘게요.
+편하게 와서 같이 놀아요!</textarea></div>
+    </section>
+
+    <section class="card">
+      <h2>날짜와 시간</h2>
+      <div class="row">
+        <div class="field"><label for="f-date">날짜</label><input id="f-date" type="date" value="2026-10-30"></div>
+        <div class="field"><label for="f-time">시작 시간</label><input id="f-time" type="time" value="19:00"></div>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>장소</h2>
+      <div class="row">
+        <div class="field"><label for="f-place">장소 이름</label><input id="f-place" value="헤이미네 집"></div>
+        <div class="field"><label for="f-detail">상세 (층·호수)</label><input id="f-detail" value="3층 302호"></div>
+      </div>
+      <div class="field"><label for="f-addr">주소</label><input id="f-addr" value="서울시 마포구 연남로 12"></div>
+    </section>
+
+    <section class="card">
+      <h2>오프닝 연출 <small>초대자에게만 보이는 설정</small></h2>
+      <div class="tiers">
+        <label class="tier"><input type="radio" name="tier" value="free"><span><b>기본</b><p>포스터가 부드럽게 나타나요</p></span><span class="price">무료</span></label>
+        <label class="tier"><input type="radio" name="tier" value="basic"><span><b id="tb-basic">반짝 연출</b><p id="tp-basic">제목 글자가 튀어 오르고 스티커가 반짝여요</p></span><span class="price">500원</span></label>
+        <label class="tier"><input type="radio" name="tier" value="premium" checked><span><b><span id="tb-premium">선물상자 연출</span><span class="badge">추천</span></b><p id="tp-premium">리본을 풀고 상자가 열리며 포스터가 나타나요</p></span><span class="price">1,000원</span></label>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>공개 기간</h2>
+      <div class="periods">
+        <label class="chip"><input type="radio" name="period" value="0" checked>행사일 + 7일 · 무료</label>
+        <label class="chip"><input type="radio" name="period" value="500">+30일 · 500원</label>
+        <label class="chip"><input type="radio" name="period" value="2000">+1년 · 2,000원</label>
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="total">
+        <div><div style="font-size:13px;color:var(--e-sub)">결제 금액</div><strong id="total">1,000원</strong></div>
+        <button class="pay" id="pay" type="button">공유 링크 만들기</button>
+      </div>
+      <div class="share" id="share">
+        <div class="share-url"><input id="shareUrl" readonly aria-label="공유 링크"><button type="button" id="copyLink">복사</button></div>
+        <div class="share-btns"><button type="button" class="kakao" id="kakaoShare">카카오톡으로 보내기</button><a id="openShared" target="_blank" rel="noopener">새 창에서 열기</a></div>
+        <small id="shareNote"></small>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>받은 참석 응답 <small id="respSum"></small></h2>
+      <ul class="resp-list" id="respList"></ul>
+      <p class="resp-empty" id="respEmpty">아직 받은 응답이 없어요. 공유 링크를 보내면 여기에 모여요.</p>
+    </section>
+  </div>
+
+  <!-- ───────── 미리보기 ───────── -->
+  <aside class="pv-col">
+    <div class="pv-head"><span>참석자에게 보이는 화면</span><span style="display:flex;gap:6px"><button type="button" data-replay>↻ 연출</button><button type="button" id="openFull">전체 화면</button></span></div>
+    <div class="phone" id="phone">
+      <!-- 참석자용 화면: 실제 공유 링크와 동일한 마크업 -->
+      <div class="gframe" id="gframe">
+        <div class="g-bg" id="gbg"></div>
+        <div class="expired" id="expired"><div><b>기간이 끝난 초대장이에요</b><p>초대한 분께 새 링크를 받아 주세요.</p></div></div>
+        <nav class="g-tabs" id="gtabs"><button type="button" class="on" data-go="sec-info">행사 정보</button><button type="button" data-go="sec-rsvp">참석 응답</button></nav>
+        <div class="g-scroll" id="gscroll">
+          <main class="g-page">
+            <div class="g-brand">MOBILE <b>INVITATION</b></div>
+            <div class="poster-wrap">
+              <div class="poster" id="poster" aria-label="포스터, 탭하면 연출을 다시 봅니다">
+                <div class="poster-inner"><div class="art" id="art">
+                  <div class="poster-top" id="posterTop"><span data-bind="w1"></span><span data-bind="w2"></span><span data-bind="w3"></span></div>
+                  <svg class="ribbon" viewBox="0 0 300 330" aria-hidden="true"><path id="ribbon" d="M150 150 C 96 70, 22 78, 40 132 C 56 180, 122 172, 150 150 C 178 172, 244 180, 260 132 C 278 78, 204 70, 150 150 M150 150 C 128 196, 96 222, 70 300 M150 150 C 172 196, 204 222, 236 300 M150 150 C 140 210, 160 250, 150 318"/></svg>
+                  <div class="title" id="title"></div>
+                  <svg class="sticker" style="left:68%;top:10%" viewBox="0 0 40 40"><circle cx="20" cy="20" r="15" fill="#8ED8F8" stroke="#fff" stroke-width="3"/><circle cx="14" cy="14" r="4" fill="#fff" opacity=".8"/></svg>
+                  <svg class="sticker" style="left:20%;top:23%" viewBox="0 0 40 40"><path d="M20 3l5 11 12 1-9 8 3 12-11-6-11 6 3-12-9-8 12-1z" fill="#FFD84D" stroke="#fff" stroke-width="2.5" stroke-linejoin="round"/></svg>
+                  <svg class="sticker" style="left:9%;top:52%" viewBox="0 0 40 40"><path d="M20 35S4 25 4 14a8 8 0 0116-3 8 8 0 0116 3c0 11-16 21-16 21z" fill="#FF7FB0" stroke="#fff" stroke-width="2.5"/></svg>
+                  <svg class="sticker" style="left:79%;top:62%" viewBox="0 0 40 40"><path d="M8 14l6-8h12l6 8-12 20z" fill="#C9B6FF" stroke="#fff" stroke-width="2.5" stroke-linejoin="round"/><path d="M8 14h24M14 6l6 8 6-8M20 14v20" stroke="#fff" stroke-width="1.5" fill="none"/></svg>
+                  <span class="glint" style="left:76%;top:9%">✦</span><span class="glint" style="left:28%;top:22%">✦</span><span class="glint" style="left:16%;top:51%">✦</span><span class="glint" style="left:86%;top:61%">✦</span>
+                </div></div>
+                <div class="poster-inner art-wine" id="artWine" aria-hidden="true">
+                  <div id="wineSvg" style="position:absolute;inset:0"></div>
+                  <div class="w-title"><span class="w1" id="wt1"></span><span class="w2" id="wt2"></span></div>
+                </div>
+                <div class="curtain" id="curtain" aria-hidden="true">
+                  <div class="cur cur-l" id="curL"></div><div class="cur cur-r" id="curR"></div><div class="cur-top" id="curTop"></div>
+                </div>
+                <div class="gift" id="gift" aria-hidden="true">
+                  <div class="front" id="front"></div>
+                  <div class="lid" id="lid"></div>
+                  <div class="band band-v" id="bandV"></div>
+                  <div class="band band-h" id="bandH"></div>
+                  <svg class="bow" id="bow" viewBox="0 0 160 100">
+                    <path id="tailL" d="M80 52 L56 98"/><path id="tailR" d="M80 52 L104 98"/>
+                    <path class="loop" d="M80 50 C 60 18, 16 12, 20 42 C 23 66, 62 62, 80 50"/>
+                    <path class="loop" d="M80 50 C 100 18, 144 12, 140 42 C 137 66, 98 62, 80 50"/>
+                    <path class="loop loop-hi" d="M70 40 C 56 28, 34 26, 32 38"/><path class="loop loop-hi" d="M90 40 C 104 28, 126 26, 128 38"/>
+                    <circle id="knot" cx="80" cy="50" r="11"/>
+                  </svg>
+                </div>
+                <canvas class="glitter" id="glitter"></canvas>
+              </div>
+            </div>
+
+            <section id="sec-info">
+              <h2 class="event-name" data-bind="name"></h2>
+              <div class="block"><div class="label">HOSTED BY</div><div class="mono"><i data-bind="host"></i></div></div>
+              <div class="rule"></div>
+
+              <!-- 참석 응답: 행사명·초대자 바로 아래 -->
+              <div class="block" id="sec-rsvp">
+                <div class="rsvp-q">참석하시겠습니까?</div>
+                <div class="rsvp-form">
+                  <input id="g-name" placeholder="이름을 적어주세요" maxlength="20" aria-label="이름" autocomplete="name">
+                  <div class="rsvp-btns"><button type="button" class="yes" data-rsvp="yes">참석</button><button type="button" data-rsvp="no">미참석</button></div>
+                  <div class="rsvp-err" id="rsvpErr"></div>
+                </div>
+                <div class="rsvp-done"><p id="rsvpMsg"></p><button type="button" id="rsvpEdit">응답 바꾸기</button></div>
+              </div>
+              <div class="rule"></div>
+
+              <div class="block"><div class="label">WHEN</div>
+                <div class="mono"><span class="u" data-bind="dateText"></span><br><span class="u" data-bind="timeText"></span></div>
+                <div class="dday" data-bind="dday"></div>
+              </div>
+              <div class="rule"></div>
+
+              <div class="block"><div class="label">WHERE</div>
+                <div class="mono"><span data-bind="place"></span><br><span data-bind="addr"></span><br><span data-bind="detail"></span></div>
+                <button type="button" class="g-btn" id="openMaps">지도앱 열기</button>
+              </div>
+              <div class="rule"></div>
+
+              <div class="block"><div class="mono" data-bind="msg"></div></div>
+            </section>
+
+            <div class="rule" style="margin:20px 25%"></div>
+            <section class="block">
+              <div class="label">GUEST LIST</div>
+              <div class="guest-count" id="gYes"></div>
+              <div class="guest-sub" id="gNo"></div>
+            </section>
+          </main>
+        </div>
+
+        <div class="g-cta" id="gcta"><button type="button" class="g-stamp" id="gstamp">참석 여부 알려주기<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="square" aria-hidden="true"><path d="M4 10h11M11 5l5 5-5 5"/></svg></button></div>
+
+        <div class="g-sheet-bg" id="sheetBg"></div>
+        <div class="g-sheet" role="dialog" aria-label="지도앱 선택">
+          <h3>어떤 지도앱으로 열까요?</h3>
+          <div class="addr" data-bind="addr"></div>
+          <div class="maps">
+            <a id="mapNaver" target="_blank" rel="noopener"><i style="background:#03C75A">N</i>네이버 지도</a>
+            <a id="mapKakao" target="_blank" rel="noopener"><i style="background:#FEE500;color:#3C1E1E">K</i>카카오맵</a>
+            <a id="mapGoogle" target="_blank" rel="noopener"><i style="background:#4285F4">G</i>구글 지도</a>
+          </div>
+          <button type="button" class="copy" id="copyAddr">주소 복사</button>
+        </div>
+      </div>
+    </div>
+  </aside>
+</div>
+
+<!-- 모바일: 편집 중 미리보기 버튼 -->
+<div class="mobile-pv"><button type="button" id="openFullM">참석자 화면 미리보기</button></div>
+
+<!-- 전체화면 미리보기 상단 바 (초대자에게만 보임) -->
+<div class="pv-bar"><button type="button" id="closeFull">← 편집으로</button><span>미리보기 · 참석자 화면</span><button type="button" data-replay>↻ 연출</button></div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const $ = (s, r = document) => r.querySelector(s), $$ = (s, r = document) => [...r.querySelectorAll(s)];
+const won = n => n === 0 ? '무료' : n.toLocaleString('ko-KR') + '원';
+const TIER_PRICE = {free:0, basic:500, premium:1000};
+const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+/* ───────── 상태 (예시 데이터) ───────── */
+const state = {
+  responses: [ // 예시 응답
+    ...['지수','민호','서연','태윤','하은','도윤','유나','현우','소라','진영','다은'].map(n => ({name:n, s:'yes'})),
+    {name:'준서', s:'no'}, {name:'예린', s:'no'}
+  ],
+  myIndex: -1
+};
+const val = id => $('#' + id).value.trim();
+const tier = () => $('input[name=tier]:checked').value;
+
+/* ───────── 편집 → 참석자 화면 반영 ───────── */
+function fmtDate(iso){
+  if (!iso) return '';
+  const [y,m,d] = iso.split('-').map(Number), wd = '일월화수목금토'[new Date(y, m-1, d).getDay()];
+  return `${y}년 ${m}월 ${d}일 ${wd}요일`;
+}
+function fmtTime(t){
+  if (!t) return '';
+  let [h, mi] = t.split(':').map(Number);
+  const part = h < 12 ? '오전' : h < 18 ? '오후' : '저녁';
+  const h12 = h % 12 || 12;
+  return `${part} ${h12}:${String(mi).padStart(2,'0')}`;
+}
+function dday(iso){
+  if (!iso) return '';
+  const [y,m,d] = iso.split('-').map(Number);
+  const n = Math.round((new Date(y, m-1, d) - new Date(new Date().toDateString())) / 864e5);
+  return n > 0 ? `D-${n}` : n === 0 ? 'D-DAY' : '지난 행사';
+}
+function setTitle(){
+  $('#wt1').textContent = val('f-t1');
+  $('#wt2').innerHTML = [...val('f-t2')].map(c => `<span class="ch">${c === ' ' ? '&nbsp;' : esc(c)}</span>`).join('');
+  const lines = [val('f-t1'), val('f-t2')].filter(Boolean);
+  $('#title').innerHTML = lines.map(l => [...l].map(c => `<span class="ch">${c === ' ' ? '&nbsp;' : c.replace(/[<>&]/g,'')}</span>`).join('')).join('<br>');
+}
+function render(){
+  const b = {
+    w1: val('f-w1'), w2: val('f-w2'), w3: val('f-w3'), name: val('f-name'), host: val('f-host'),
+    msg: $('#f-msg').value.trim(), place: val('f-place'), addr: val('f-addr'), detail: val('f-detail'),
+    dateText: fmtDate(val('f-date')), timeText: fmtTime(val('f-time')), dday: dday(val('f-date'))
+  };
+  $$('[data-bind]').forEach(el => el.textContent = b[el.dataset.bind] ?? '');
+  setTitle();
+  // 지도 링크
+  const q = encodeURIComponent(b.addr);
+  $('#mapNaver').href = `https://map.naver.com/p/search/${q}`;
+  $('#mapKakao').href = `https://map.kakao.com/?q=${q}`;
+  $('#mapGoogle').href = `https://www.google.com/maps/search/?api=1&query=${q}`;
+  renderGuests();
+}
+const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+function renderGuests(){
+  let yes = state.responses.filter(r => r.s === 'yes').length, no = state.responses.length - yes;
+  if (state.counts){ yes = state.counts.yes; no = state.counts.no; }
+  $('#gYes').textContent = `${yes}명 참석`;
+  $('#gNo').textContent = `${no}명 미참석`;
+}
+
+
+// 입력 변경 → 즉시 반영 (포스터 문구가 바뀌면 연출 다시)
+let replayTimer;
+$$('.app input:not([name]), .app textarea').forEach(el => el.addEventListener('input', () => {
+  render(); if (el.id.startsWith('f-')) queueSave();
+  if (/^f-(t1|t2|w\d)$/.test(el.id)){ clearTimeout(replayTimer); replayTimer = setTimeout(play, 700); }
+}));
+// 연출 등급 · 기간
+function updateTotal(){
+  const sum = TIER_PRICE[tier()] + Number($('input[name=period]:checked').value);
+  $('#total').textContent = won(sum);
+}
+$$('input[name=tier]').forEach(r => r.addEventListener('change', () => { updateTotal(); queueSave(); scrollGuestTop(); play(); }));
+$$('input[name=period]').forEach(r => r.addEventListener('change', () => { updateTotal(); queueSave(); }));
+
+/* 결제 (데모) */
+function toast(msg){ const t = $('#toast'); t.textContent = msg; t.classList.add('show'); clearTimeout(t._h); t._h = setTimeout(() => t.classList.remove('show'), 2200); }
+async function copy(text, okMsg){ try { await navigator.clipboard.writeText(text); toast(okMsg); } catch { toast('복사하지 못했어요. 길게 눌러 직접 복사해 주세요'); } }
+
+/* 전체화면 미리보기 */
+const openFull = () => { document.body.classList.add('fullpv'); scrollGuestTop(); requestAnimationFrame(play); };
+$('#openFull').addEventListener('click', openFull);
+$('#openFullM').addEventListener('click', openFull);
+$('#closeFull').addEventListener('click', () => { document.body.classList.remove('fullpv'); closeSheet(); });
+$$('[data-replay]').forEach(b => b.addEventListener('click', () => { scrollGuestTop(); play(); }));
+
+/* ───────── 참석자 화면 인터랙션 ───────── */
+const gframe = $('#gframe'), gscroll = $('#gscroll');
+function scrollGuestTop(){ gscroll.scrollTop = 0; }
+// 상단 탭
+const gtabs = $('#gtabs');
+new IntersectionObserver(([e]) => gtabs.classList.toggle('show', !e.isIntersecting && e.rootBounds && e.boundingClientRect.top < e.rootBounds.top),
+  {root: gscroll}).observe($('#poster'));
+$$('[data-go]').forEach(b => b.addEventListener('click', () => {
+  const t = $('#' + b.dataset.go); gscroll.scrollTo({top: t.offsetTop - 60, behavior: reduceMotion ? 'auto' : 'smooth'});
+}));
+gscroll.addEventListener('scroll', () => {
+  const r = $('#sec-rsvp').getBoundingClientRect(), fr = gscroll.getBoundingClientRect();
+  const onRsvp = r.top - fr.top < fr.height * .5 && r.bottom - fr.top > 60;
+  $$('[data-go]').forEach(b => b.classList.toggle('on', (b.dataset.go === 'sec-rsvp') === onRsvp));
+  $('#gcta').classList.toggle('hide', onRsvp || state.myIndex >= 0);
+}, {passive:true});
+// 우표 버튼 → 참석 응답으로 이동
+$('#gstamp').addEventListener('click', () => { gscroll.scrollTo({top: $('#sec-rsvp').offsetTop - 60, behavior:'smooth'}); setTimeout(() => $('#g-name').focus({preventScroll:true}), 450); });
+
+// 참석 응답
+$$('[data-rsvp]').forEach(b => b.addEventListener('click', () => {
+  const name = $('#g-name').value.trim();
+  if (!name){ $('#rsvpErr').textContent = '이름을 적어주세요'; $('#g-name').focus(); return; }
+  $('#rsvpErr').textContent = '';
+  const entry = {name, s: b.dataset.rsvp};
+  if (SB && SLUG){
+    SB.rpc('upsert_rsvp', {p_slug: SLUG, p_device: deviceId(), p_name: name, p_status: entry.s})
+      .then(({error}) => {
+        if (error) throw error;
+        try { localStorage.setItem('rsvp_' + SLUG, JSON.stringify(entry)); } catch {}
+        return loadCounts();
+      })
+      .catch(() => { $('#rsvpErr').textContent = '응답을 저장하지 못했어요. 잠시 후 다시 눌러주세요'; $('#sec-rsvp').classList.remove('answered'); });
+    state.myIndex = 0;
+  } else if (state.myIndex >= 0) state.responses[state.myIndex] = entry; else state.myIndex = state.responses.push(entry) - 1;
+  $('#rsvpMsg').textContent = entry.s === 'yes' ? `${name}님, 참석으로 전달했어요.\n그날 만나요!` : `${name}님, 미참석으로 전달했어요.\n다음에 꼭 봐요!`;
+  $('#sec-rsvp').classList.add('answered'); $('#gcta').classList.add('hide');
+  renderGuests();
+}));
+$('#rsvpEdit').addEventListener('click', () => $('#sec-rsvp').classList.remove('answered'));
+
+// 지도앱 선택 시트
+const openSheet = () => gframe.classList.add('sheet-open'), closeSheet = () => gframe.classList.remove('sheet-open');
+$('#openMaps').addEventListener('click', openSheet);
+$('#sheetBg').addEventListener('click', closeSheet);
+$$('.maps a').forEach(a => a.addEventListener('click', closeSheet));
+$('#copyAddr').addEventListener('click', () => { copy([val('f-addr'), val('f-detail')].filter(Boolean).join(' '), '주소를 복사했어요'); closeSheet(); });
+
+/* ───────── 오프닝 연출 ───────── */
+const bg = $('#gbg'), poster = $('#poster'), ribbon = $('#ribbon'), art = $('#art'), posterTop = $('#posterTop');
+const stickers = $$('.sticker'), glints = $$('.glint');
+const gift = $('#gift'), lid = $('#lid'), front = $('#front'), bandV = $('#bandV'), bandH = $('#bandH'),
+      bow = $('#bow'), knot = $('#knot'), tailL = $('#tailL'), tailR = $('#tailR'), bowLoops = $$('#bow .loop');
+const giftParts = [gift, lid, front, bandV, bandH, bow, knot, tailL, tailR, ...bowLoops];
+const ribbonLen = ribbon.getTotalLength();
+
+// 글리터
+const cv = $('#glitter'), cx = cv.getContext('2d');
+let parts = [], rafId = null;
+function burst(xRatio = .5, yRatio = .5){
+  const r = poster.getBoundingClientRect(), dpr = devicePixelRatio || 1;
+  cv.width = r.width * dpr; cv.height = r.height * dpr; cx.setTransform(dpr,0,0,dpr,0,0);
+  const colors = ['#FFE27A','#FFFFFF','#FF9A6B','#9EE3FF','#FFD24D'];
+  parts = Array.from({length:140}, () => {
+    const a = Math.random() * Math.PI * 2, s = 3 + Math.random() * 7;
+    return {x:r.width*xRatio, y:r.height*yRatio, vx:Math.cos(a)*s, vy:Math.sin(a)*s - 3, life:1, decay:.008 + Math.random()*.012,
+      size:2 + Math.random()*4, rot:Math.random()*6, vr:(Math.random()-.5)*.4, c:colors[(Math.random()*colors.length)|0], star:Math.random() < .3};
+  });
+  cancelAnimationFrame(rafId); tick();
+}
+function tick(){
+  cx.clearRect(0,0,cv.width,cv.height);
+  parts.forEach(p => {
+    p.vx *= .97; p.vy = p.vy * .97 + .18; p.x += p.vx; p.y += p.vy; p.rot += p.vr; p.life -= p.decay;
+    if (p.life <= 0) return;
+    cx.save(); cx.globalAlpha = Math.min(1, p.life * 1.4) * (.6 + .4*Math.sin(p.life*30));
+    cx.translate(p.x, p.y); cx.rotate(p.rot); cx.fillStyle = p.c;
+    if (p.star){ cx.beginPath(); for (let i = 0; i < 4; i++){ cx.rotate(Math.PI/2); cx.moveTo(0,0); cx.lineTo(p.size*1.6,0); } cx.strokeStyle = p.c; cx.lineWidth = 1.4; cx.stroke(); }
+    else cx.fillRect(-p.size/2, -p.size/4, p.size, p.size/2);
+    cx.restore();
+  });
+  parts = parts.filter(p => p.life > 0);
+  if (parts.length) rafId = requestAnimationFrame(tick); else cx.clearRect(0,0,cv.width,cv.height);
+}
+
+let loops = [];
+function sparkleLoop(){
+  stickers.forEach((s,i) => loops.push(gsap.to(s, {scale:1.12, rotation:i%2?8:-8, duration:.7+i*.15, ease:'sine.inOut', yoyo:true, repeat:-1})));
+  glints.forEach((g,i) => loops.push(gsap.fromTo(g, {opacity:0, scale:.3}, {opacity:1, scale:1.3, duration:.35, yoyo:true, repeat:-1, repeatDelay:1.2+i*.5, delay:i*.4})));
+}
+
+/* ───────── 템플릿 정의 ───────── */
+const TPL = {
+  homeparty: {t1:'금요일 밤', t2:'홈파티', words:true, name:'헤이미네 금요일 홈파티', msg:'맛있는 피자와 와인 준비해둘게요.\n편하게 와서 같이 놀아요!',
+    basic:['반짝 연출','제목 글자가 튀어 오르고 스티커가 반짝여요'], premium:['선물상자 연출','리본을 풀고 상자가 열리며 포스터가 나타나요']},
+  wine: {t1:'Wine &', t2:'Party', words:false, name:'헤이미네 와인 파티', msg:'좋아하는 와인 한 병씩 들고 와요.\n천천히 한 잔 하면서 이야기 나눠요.',
+    basic:['찰랑 연출','와인이 찰랑이고 제목이 떠올라요'], premium:['커튼 & 건배 연출','커튼이 양옆으로 걷히고, 잔이 부딪히며 와인이 차올라요']}
+};
+const curTpl = () => gframe.dataset.tpl || 'homeparty';
+function setTemplate(t){
+  if (!TPL[t]) t = 'homeparty';
+  gframe.dataset.tpl = t;
+  $('#wordsRow').hidden = !TPL[t].words;
+  ['basic','premium'].forEach(k => { $('#tb-' + k).textContent = TPL[t][k][0]; $('#tp-' + k).textContent = TPL[t][k][1]; });
+}
+
+/* 와인 포스터 SVG (Paperless Post 'Filled Glass' 참고): 잔 3개 + 물결치는 와인 + 아래 와인 띠 */
+function wavePath(y, x0, w, amp){
+  let d = `M${x0} ${y} Q${x0+25} ${y-amp} ${x0+50} ${y}`;
+  for (let x = x0 + 100; x <= x0 + w; x += 50) d += ` T${x} ${y}`;
+  return d + ` L${x0+w} 420 L${x0} 420 Z`;
+}
+function bowl(cx){ return `M${cx-47} -10 L${cx-47} 118 C${cx-47} 172 ${cx-13} 198 ${cx-2.5} 212 L${cx+2.5} 212 C${cx+13} 198 ${cx+47} 172 ${cx+47} 118 L${cx+47} -10 Z`; }
+function wineSVG(p, ids){
+  const id = n => ids ? ` id="${p}${n}"` : '';
+  const cxs = [50, 150, 250];
+  let g = '';
+  cxs.forEach((cx, i) => {
+    let bub = '';
+    if (ids) for (let k = 0; k < 3; k++) bub += `<circle class="wb" cx="${cx - 18 + k*17}" cy="200" r="1.8" fill="#FFD3DD" opacity="0"/>`;
+    g += `<g class="wglass"${id('g'+i)}>
+      <g clip-path="url(#${p}c${i})"><g class="wliq"${id('l'+i)}><path class="wv" d="${wavePath(104, cx-60, 260, 9)}" fill="url(#${p}wine)"/><path d="M${cx-60} 104 L${cx+200} 104" stroke="rgba(255,255,255,.18)" stroke-width="2"/></g>${bub}</g>
+      <path class="wo" d="${bowl(cx)}" fill="none" stroke="#A3243F" stroke-width="1.6"/>
+      <path class="wo" d="M${cx-1.4} 212 L${cx-1.4} 400 M${cx+1.4} 212 L${cx+1.4} 400" fill="none" stroke="#A3243F" stroke-width="1.1"/>
+    </g>`;
+  });
+  return `<svg viewBox="0 0 300 400" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><defs>
+    <linearGradient id="${p}bg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#E9C24A"/><stop offset=".55" stop-color="#E68A3B"/><stop offset="1" stop-color="#D9653A"/></linearGradient>
+    <linearGradient id="${p}wine" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#DA3550"/><stop offset="1" stop-color="#8C1547"/></linearGradient>
+    ${cxs.map((cx,i) => `<clipPath id="${p}c${i}"><path d="${bowl(cx)}"/></clipPath>`).join('')}
+  </defs>
+  <rect width="300" height="400" fill="url(#${p}bg)"/>
+  <g${id('band')}><path class="wv2" d="${wavePath(318, -100, 600, 10)}" fill="url(#${p}wine)" opacity=".95"/></g>
+  ${g}</svg>`;
+}
+$('#wineSvg').innerHTML = wineSVG('pw', true);
+$('#wineThumb').innerHTML = wineSVG('tw', false);
+const W = {
+  glasses: [0,1,2].map(i => $('#pwg' + i)), liq: [0,1,2].map(i => $('#pwl' + i)),
+  waves: $$('#wineSvg .wv'), band: $('#pwband'), wave2: $('#wineSvg .wv2'), outlines: $$('#wineSvg .wo'), bubbles: $$('#wineSvg .wb'),
+  art: $('#artWine')
+};
+W.outlines.forEach(o => o._len = o.getTotalLength());
+function wineLoops(){
+  W.waves.forEach((w, i) => loops.push(gsap.fromTo(w, {x:0}, {x:-100, duration:2.4 + i*.35, ease:'none', repeat:-1})));
+  loops.push(gsap.fromTo(W.wave2, {x:0}, {x:-100, duration:4, ease:'none', repeat:-1}));
+  W.bubbles.forEach((b, i) => loops.push(gsap.fromTo(b, {attr:{cy:205}, opacity:0}, {attr:{cy:118}, opacity:.9, duration:2.2 + (i%3)*.5, ease:'sine.in', repeat:-1, delay:i*.37, repeatDelay:.6})));
+}
+const CUR = {root: $('#curtain'), l: $('#curL'), r: $('#curR'), top: $('#curTop')};
+function playWine(t){
+  const chars = $$('#wt2 .ch'), w1 = $('#wt1');
+  gsap.killTweensOf(Object.values(CUR));
+  gsap.set(Object.values(CUR), {clearProps:'transform,opacity'});
+  gsap.set(CUR.root, {display: t === 'premium' ? 'block' : 'none'});
+  gsap.killTweensOf([W.art, ...W.glasses, ...W.liq, W.band, ...W.outlines, w1, ...chars]);
+  gsap.set(W.art, {opacity:1});
+  gsap.set(W.glasses, {rotation:0, svgOrigin:'0 0', clearProps:'transform'});
+  gsap.set(W.liq, {y:0}); gsap.set(W.band, {y:0});
+  W.outlines.forEach(o => gsap.set(o, {strokeDasharray:o._len, strokeDashoffset:0}));
+  gsap.set([w1, ...chars], {opacity:1, y:0, filter:'blur(0px)'});
+  gsap.set(W.bubbles, {opacity:0});
+  tl = gsap.timeline();
+  if (t === 'free'){ tl.from(poster, {opacity:0, y:14, duration:.8, ease:'power2.out'}); return; }
+  wineLoops();
+  if (t === 'premium'){
+    // 1) 배경 → 빈 잔 윤곽이 그려짐
+    gsap.set(W.liq, {y:130}); gsap.set(W.band, {y:110});
+    gsap.set([w1, ...chars], {opacity:0});
+    W.outlines.forEach(o => gsap.set(o, {strokeDashoffset:o._len}));
+    tl.fromTo(bg, {clipPath:'circle(0% at 50% 30%)'}, {clipPath:'circle(150% at 50% 30%)', duration:.8, ease:'power3.inOut'})
+      // 0) 닫힌 커튼 → 살랑 → 양옆으로 걷히며 와인 무대 공개 → 윗단 장식이 올라감
+      .from(CUR.root, {opacity:0, duration:.4}, '-=.4')
+      .from(poster, {scale:.95, duration:.6, ease:'power2.out'}, '<')
+      .to([CUR.l, CUR.r], {skewX:(i) => i ? -2.5 : 2.5, duration:.35, yoyo:true, repeat:1, ease:'sine.inOut'}, '+=.1')
+      .to(CUR.l, {scaleX:.14, skewY:-2, duration:1.15, ease:'power3.inOut'}, '+=.05')
+      .to(CUR.r, {scaleX:.14, skewY:2, duration:1.15, ease:'power3.inOut'}, '<')
+      .call(burst, [.5, .45], '<.45')
+      .from(W.art, {scale:1.06, duration:1.2, ease:'power2.out'}, '<')
+      .to(CUR.top, {yPercent:-110, duration:.6, ease:'power2.in'}, '-=.3')
+      .to([CUR.l, CUR.r], {opacity:0, duration:.4}, '<.1')
+      .set(CUR.root, {display:'none'})
+      .fromTo(W.outlines, {strokeDashoffset:(i, el) => el._len}, {strokeDashoffset:0, duration:.8, ease:'power2.inOut', stagger:.04}, '-=.35')
+      // 2) 건배: 양쪽 잔이 가운데로 기울어 쨍
+      .to(W.glasses[0], {rotation:2.2, svgOrigin:'50 400', duration:.32, ease:'power2.in'}, '+=.1')
+      .to(W.glasses[2], {rotation:-2.2, svgOrigin:'250 400', duration:.32, ease:'power2.in'}, '<')
+      .call(() => { burst(.34, .2); burst(.66, .2); })
+      .to(W.glasses[0], {rotation:0, svgOrigin:'50 400', duration:.6, ease:'elastic.out(1,.35)'})
+      .to(W.glasses[2], {rotation:0, svgOrigin:'250 400', duration:.6, ease:'elastic.out(1,.35)'}, '<')
+      // 3) 와인이 찰랑이며 차오름
+      .to(W.liq, {y:0, duration:1.3, ease:'power2.out', stagger:.12}, '-=.35')
+      .to(W.band, {y:0, duration:1.1, ease:'power2.out'}, '<.2')
+      // 4) 제목
+      .fromTo(w1, {opacity:0, y:12, filter:'blur(6px)'}, {opacity:1, y:0, filter:'blur(0px)', duration:.6, ease:'power2.out'}, '-=.7')
+      .fromTo(chars, {opacity:0, y:30, filter:'blur(8px)'}, {opacity:1, y:0, filter:'blur(0px)', duration:.7, ease:'power3.out', stagger:.12}, '-=.35');
+  } else {
+    tl.from(poster, {opacity:0, y:10, duration:.45, ease:'power2.out'})
+      .from(W.liq, {y:18, duration:1.2, ease:'elastic.out(1,.4)', stagger:.08}, '<')
+      .fromTo(w1, {opacity:0, y:10}, {opacity:1, y:0, duration:.5}, '-=.7')
+      .fromTo(chars, {opacity:0, y:24}, {opacity:1, y:0, duration:.6, ease:'back.out(2)', stagger:.1}, '-=.3');
+  }
+}
+
+let tl;
+function play(){
+  if (typeof gsap === 'undefined') return;
+  const t = reduceMotion ? 'free' : tier(), chars = $$('#title .ch');
+  tl && tl.kill(); loops.forEach(x => x.kill()); loops = []; parts = [];
+  gsap.killTweensOf([bg, poster, posterTop, ribbon, art, ...posterTop.children, ...chars, ...stickers, ...glints, ...giftParts]);
+  gsap.set(giftParts, {clearProps:'transform,opacity'});
+  gsap.set(gift, {display: t === 'premium' ? 'block' : 'none'});
+  gsap.set(bandV, {xPercent:-50});
+  bowLoops.forEach(l => { const n = l.getTotalLength(); gsap.set(l, {strokeDasharray:n, strokeDashoffset:0}); });
+  gsap.set(bg, {clipPath:'circle(150% at 50% 30%)'});
+  gsap.set([poster, art, posterTop, ...posterTop.children], {opacity:1, scale:1, y:0});
+  gsap.set(ribbon, {strokeDasharray:ribbonLen, strokeDashoffset:0});
+  gsap.set(stickers, {opacity:1, scale:1, rotation:0, transformOrigin:'50% 50%'});
+  gsap.set(glints, {opacity:0});
+
+  if (curTpl() === 'wine'){ gsap.set(gift, {display:'none'}); playWine(t); return; }
+  gsap.set('#curtain', {display:'none'});
+  tl = gsap.timeline();
+  if (t === 'free'){ tl.from(poster, {opacity:0, y:14, duration:.8, ease:'power2.out'}); return; }
+
+  if (t === 'premium'){
+    gsap.set(art, {opacity:0});
+    tl.fromTo(bg, {clipPath:'circle(0% at 50% 30%)'}, {clipPath:'circle(150% at 50% 30%)', duration:.8, ease:'power3.inOut'})
+      .from(gift, {y:-60, opacity:0, scale:.88, rotation:-4, duration:.7, ease:'back.out(1.7)'}, '-=.35')
+      .to(gift, {rotation:2.5, duration:.07, yoyo:true, repeat:5, ease:'sine.inOut'}, '+=.15')
+      .to(gift, {rotation:0, duration:.07})
+      // 리본 풀기
+      .to([tailL, tailR], {y:7, duration:.14, yoyo:true, repeat:1, ease:'power1.inOut'}, '+=.1')
+      .to(knot, {scale:0, svgOrigin:'80 50', duration:.25, ease:'back.in(2.5)'})
+      .to(bowLoops, {strokeDashoffset:(i, el) => el.getTotalLength(), duration:.55, ease:'power2.in', stagger:.04}, '<')
+      .to(tailL, {rotation:-40, y:46, opacity:0, svgOrigin:'80 52', duration:.55, ease:'power2.in'}, '<.08')
+      .to(tailR, {rotation:40, y:46, opacity:0, svgOrigin:'80 52', duration:.55, ease:'power2.in'}, '<')
+      .to(bandH, {scaleX:0, duration:.45, ease:'power3.in'}, '-=.3')
+      .to(bandV, {scaleY:0, transformOrigin:'50% 0%', duration:.5, ease:'power3.in'}, '<.06')
+      .set(bow, {opacity:0})
+      // 상자 열림
+      .set(art, {opacity:1})
+      .to(lid, {y:-26, rotation:-6, duration:.22, ease:'power2.out'}, '+=.05')
+      .to(lid, {y:-320, x:70, rotation:-38, opacity:0, duration:.7, ease:'power2.in'})
+      .call(burst, [.5, .12], '<.05')
+      .to(front, {rotationX:-105, transformPerspective:900, transformOrigin:'50% 100%', opacity:0, duration:.75, ease:'power2.in'}, '<.05')
+      .set(gift, {display:'none'})
+      // 포스터 속 연출
+      .fromTo(ribbon, {strokeDashoffset:ribbonLen}, {strokeDashoffset:0, duration:1, ease:'power2.inOut'}, '-=.55')
+      .from(posterTop.children, {opacity:0, y:-10, stagger:.08, duration:.3}, '<.2');
+  } else {
+    tl.from(poster, {opacity:0, y:10, duration:.45, ease:'power2.out'});
+  }
+  tl.from(chars, {opacity:0, y:70, scale:.3, rotation:() => gsap.utils.random(-25,25), duration:.55, ease:'back.out(2.6)', stagger:.07}, t === 'premium' ? '-=.7' : '>-.1');
+  if (t === 'premium') tl.call(burst, [.5, .5], '-=.25');
+  tl.from(stickers, {scale:0, rotation:-120, opacity:0, duration:.7, ease:'elastic.out(1,.45)', stagger:.12}, '-=.35').call(sparkleLoop);
+}
+poster.addEventListener('click', play);
+
+/* 시작 */
+/* ───────── 서버 연동 (Supabase) ─────────
+   초대자: Google 로그인 → invites 테이블에 자동 저장 → [공유 링크 만들기] 시 published=true
+   참석자: /i/<slug> 로 열면 get_invite RPC로 내용을 받아 참석자 화면만 보여줌, 응답은 upsert_rsvp RPC
+   config.js가 비어 있으면 서버 없이 이 화면 안에서만 미리보기로 동작 */
+const CFG = window.INVITE_CONFIG || {};
+const SB = (CFG.supabaseUrl && CFG.supabaseAnonKey && window.supabase) ? window.supabase.createClient(CFG.supabaseUrl, CFG.supabaseAnonKey) : null;
+const SLUG = (location.pathname.match(/^\/i\/([A-Za-z0-9]{4,16})\/?$/) || [])[1] || null;
+const isGuestView = () => !!SLUG || location.hash === '#guest';
+const FIELDS = ['f-t1','f-t2','f-w1','f-w2','f-w3','f-name','f-host','f-msg','f-date','f-time','f-place','f-detail','f-addr'];
+const sync = {user:null, invite:null, timer:null, saving:false, again:false};
+const setSave = t => { $('#saveState').textContent = t; };
+function collect(){
+  const d = {tpl: curTpl(), tier: tier(), period: $('input[name=period]:checked').value};
+  FIELDS.forEach(id => d[id.slice(2)] = $('#' + id).value);
+  return d;
+}
+function applyData(d){
+  setTemplate(d.tpl || 'homeparty');
+  FIELDS.forEach(id => { const k = id.slice(2); if (typeof d[k] === 'string') $('#' + id).value = d[k]; });
+  const t = $(`input[name=tier][value="${d.tier}"]`); if (t) t.checked = true;
+  const pr = $(`input[name=period][value="${d.period}"]`); if (pr) pr.checked = true;
+  render(); updateTotal();
+}
+function deviceId(){
+  try { let d = localStorage.getItem('inv_device'); if (!d){ d = crypto.randomUUID(); localStorage.setItem('inv_device', d); } return d; }
+  catch { return 'tmp-' + Math.random().toString(36).slice(2); }
+}
+const newSlug = () => Array.from(crypto.getRandomValues(new Uint8Array(8)), b => 'abcdefghjkmnpqrstuvwxyz23456789'[b % 31]).join('');
+function expiresAt(d){   // 행사일 + 7일(무료) / +37일 / +372일
+  const base = d.date ? new Date(d.date + 'T23:59:59+09:00') : new Date();
+  const days = {'0':7, '500':37, '2000':372}[d.period] ?? 7;
+  return new Date(base.getTime() + days * 864e5).toISOString();
+}
+const shareLink = () => sync.invite ? `${location.origin}/i/${sync.invite.slug}` : '';
+
+/* 로그인 */
+const G_ICON = '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="#4285F4" d="M22.5 12.3c0-.8-.1-1.5-.2-2.2H12v4.2h5.9a5 5 0 01-2.2 3.3v2.7h3.6c2-1.9 3.2-4.7 3.2-8z"/><path fill="#34A853" d="M12 23c3 0 5.5-1 7.3-2.7l-3.6-2.7c-1 .7-2.2 1.1-3.7 1.1-2.9 0-5.3-1.9-6.2-4.5H2.1v2.8A11 11 0 0012 23z"/><path fill="#FBBC05" d="M5.8 14.2a6.6 6.6 0 010-4.3V7.1H2.1a11 11 0 000 9.9z"/><path fill="#EA4335" d="M12 5.4c1.6 0 3.1.6 4.2 1.7l3.2-3.2A11 11 0 002.1 7.1l3.7 2.8C6.7 7.3 9.1 5.4 12 5.4z"/></svg>';
+function renderAuth(){
+  const b = $('#authBtn'); if (!SB){ b.hidden = true; return; }
+  b.hidden = false;
+  if (sync.user){ b.textContent = '로그아웃'; b.title = sync.user.email || ''; }
+  else { b.innerHTML = G_ICON + 'Google로 로그인'; b.title = ''; }
+  if (!sync.user) setSave('로그인하면 자동 저장돼요');
+}
+async function signIn(){
+  await SB.auth.signInWithOAuth({provider:'google', options:{redirectTo: location.origin + '/#edit'}});
+}
+$('#authBtn').addEventListener('click', async () => {
+  if (sync.user){ await SB.auth.signOut(); sync.user = null; sync.invite = null; renderAuth(); renderShare(); renderResponses([]); }
+  else signIn();
+});
+
+/* 저장 */
+function queueSave(){
+  if (!SB){ return; }
+  if (!sync.user){ setSave('로그인하면 자동 저장돼요'); return; }
+  setSave('저장 중…'); clearTimeout(sync.timer); sync.timer = setTimeout(saveNow, 800);
+}
+async function saveNow(){
+  if (!SB || !sync.user) return false;
+  if (sync.saving){ sync.again = true; return true; }
+  sync.saving = true;
+  const d = collect();
+  const row = {tpl: d.tpl, tier: d.tier, period: d.period, data: d, expires_at: expiresAt(d), updated_at: new Date().toISOString()};
+  let ok = true;
+  try {
+    if (sync.invite){
+      const {error} = await SB.from('invites').update(row).eq('id', sync.invite.id);
+      if (error) throw error;
+    } else {
+      const {data, error} = await SB.from('invites').insert({...row, owner: sync.user.id, slug: newSlug()}).select('id, slug, published').single();
+      if (error) throw error;
+      sync.invite = data;
+    }
+    setSave(sync.invite.published ? '저장됨 · 공유 링크에 반영' : '저장됨');
+  } catch (e){ ok = false; setSave('저장하지 못했어요'); console.error(e); }
+  sync.saving = false;
+  if (sync.again){ sync.again = false; return saveNow(); }
+  return ok;
+}
+
+/* 공유 링크 발급 (결제는 연동 전: 지금은 바로 발급) */
+function renderShare(){
+  const on = !!(sync.invite && sync.invite.published);
+  $('#share').classList.toggle('show', on);
+  if (!on) return;
+  const url = shareLink();
+  $('#shareUrl').value = url; $('#openShared').href = url;
+  $('#shareNote').textContent = `공개 기간: ${new Date(expiresAt(collect())).toLocaleDateString('ko-KR')}까지 · 내용을 고치면 같은 링크에 바로 반영돼요`;
+  $('#pay').textContent = '공유 링크 다시 보기';
+}
+$('#pay').addEventListener('click', async () => {
+  if (!SB){ toast('config.js에 서버 정보를 넣으면 실제 링크가 만들어져요'); return; }
+  if (!sync.user){ toast('Google로 로그인한 뒤 링크를 만들 수 있어요'); signIn(); return; }
+  clearTimeout(sync.timer);
+  if (!(await saveNow())) return;
+  const {error} = await SB.from('invites').update({published: true}).eq('id', sync.invite.id);
+  if (error){ toast('링크를 만들지 못했어요. 잠시 후 다시 시도해 주세요'); return; }
+  sync.invite.published = true; renderShare(); setSave('저장됨 · 공유 링크에 반영');
+  toast('공유 링크가 만들어졌어요');
+});
+$('#copyLink').addEventListener('click', () => copy(shareLink(), '링크를 복사했어요'));
+$('#kakaoShare').addEventListener('click', () => {
+  const url = shareLink();
+  if (!window.Kakao || !CFG.kakaoJsKey){ copy(url, '카카오 키가 없어 링크를 복사했어요. 카톡에 붙여 넣어 주세요'); return; }
+  if (!Kakao.isInitialized()) Kakao.init(CFG.kakaoJsKey);
+  Kakao.Share.sendDefault({
+    objectType: 'feed',
+    content: {title: val('f-name') || '초대장이 도착했어요', description: [fmtDate(val('f-date')), val('f-place')].filter(Boolean).join(' · '),
+      imageUrl: location.origin + '/og.png', link: {mobileWebUrl: url, webUrl: url}},
+    buttons: [{title: '초대장 열기', link: {mobileWebUrl: url, webUrl: url}}]
+  });
+});
+
+/* 받은 응답 (초대자) */
+function renderResponses(rows){
+  const yes = rows.filter(r => r.status === 'yes').length;
+  $('#respSum').textContent = rows.length ? `참석 ${yes} · 미참석 ${rows.length - yes}` : '';
+  $('#respEmpty').hidden = rows.length > 0;
+  $('#respList').innerHTML = rows.map(r => `<li><span>${esc(r.name)}</span><span class="${r.status}">${r.status === 'yes' ? '참석' : '미참석'}</span></li>`).join('');
+  state.responses = rows.map(r => ({name: r.name, s: r.status})); state.counts = null; renderGuests();
+}
+async function loadResponses(){
+  if (!sync.invite) return renderResponses([]);
+  const {data} = await SB.from('rsvps').select('name, status, updated_at').eq('invite_id', sync.invite.id).order('updated_at', {ascending:false});
+  renderResponses(data || []);
+}
+
+/* 참석자 화면: 서버에서 불러오기 */
+async function loadCounts(){
+  const {data} = await SB.rpc('rsvp_counts', {p_slug: SLUG});
+  const r = Array.isArray(data) ? data[0] : data;
+  state.counts = {yes: Number(r?.yes || 0), no: Number(r?.no || 0)}; renderGuests();
+}
+async function connectGuest(){
+  if (!SB){ $('#expired').classList.add('show'); return; }
+  const {data, error} = await SB.rpc('get_invite', {p_slug: SLUG});
+  const row = Array.isArray(data) ? data[0] : data;
+  if (error || !row){ $('#expired').classList.add('show'); return; }
+  applyData({...row.data, tpl: row.tpl, tier: row.tier});
+  if (row.data && row.data.name) document.title = row.data.name;
+  try {
+    const mine = JSON.parse(localStorage.getItem('rsvp_' + SLUG) || 'null');
+    if (mine){ $('#g-name').value = mine.name; state.myIndex = 0;
+      $('#rsvpMsg').textContent = mine.s === 'yes' ? `${mine.name}님, 참석으로 전달했어요.\n그날 만나요!` : `${mine.name}님, 미참석으로 전달했어요.\n다음에 꼭 봐요!`;
+      $('#sec-rsvp').classList.add('answered'); $('#gcta').classList.add('hide'); }
+  } catch {}
+  await loadCounts();
+}
+/* 초대자 화면: 로그인 상태와 내 초대장 불러오기 */
+async function connectHost(){
+  if (!SB) return;
+  const {data:{session}} = await SB.auth.getSession();
+  sync.user = session ? session.user : null;
+  renderAuth();
+  if (!sync.user) return;
+  const {data} = await SB.from('invites').select('id, slug, published, data, tpl, tier').eq('owner', sync.user.id).order('updated_at', {ascending:false}).limit(1);
+  if (data && data[0]){ sync.invite = data[0]; applyData({...data[0].data, tpl: data[0].tpl, tier: data[0].tier}); setSave('저장됨'); }
+  else setSave('로그인됨 · 입력하면 자동 저장돼요');
+  renderShare(); loadResponses();
+  SB.auth.onAuthStateChange((_e, s) => { if (!s && sync.user){ sync.user = null; renderAuth(); } });
+}
+const connect = () => SLUG ? connectGuest() : connectHost();
+/* 화면 이동: (기본) 템플릿 선택 → #edit 편집 → #guest 참석자 화면(공유 링크) */
+function applyMode(){
+  const h = location.hash, guest = isGuestView(), edit = !guest && h === '#edit';
+  document.body.classList.toggle('guestmode', guest);
+  document.body.classList.toggle('mode-gallery', !guest && !edit);
+  if (guest){ document.body.classList.remove('fullpv'); scrollGuestTop(); play(); }
+  else if (edit){ window.scrollTo(0, 0); if (matchMedia('(min-width:920px)').matches){ scrollGuestTop(); play(); } }
+  else { document.body.classList.remove('fullpv'); window.scrollTo(0, 0); }
+}
+
+/* list 화면: 히어로 포스터 · 모임 종류 필터 · 섹션 이동 */
+(function(){
+  const home = $('[data-tpl="homeparty"] .thumb').cloneNode(true); $('#heroHome').appendChild(home);
+  const w = document.createElement('div'); w.className = 'thumb-wine';
+  w.innerHTML = `<div style="position:absolute;inset:0">${wineSVG('hw', false)}</div><div class="w-title"><span class="w1">Wine &amp;</span><span class="w2">Party</span></div>`;
+  $('#heroWine').appendChild(w);
+  const cards = $$('.tpl-grid .tpl');
+  function filter(cat){
+    $$('.flt').forEach(b => b.classList.toggle('on', b.dataset.filter === cat));
+    let n = 0;
+    cards.forEach(c => { const show = cat === 'all' || c.dataset.cats.split(' ').includes(cat); c.hidden = !show; if (show && !c.disabled) n++; });
+    $('#tplCount').textContent = `${n}개`;
+    $('#tplEmpty').hidden = cards.some(c => !c.hidden);
+  }
+  $$('.flt').forEach(b => b.addEventListener('click', () => filter(b.dataset.filter)));
+  $$('.cat').forEach(b => b.addEventListener('click', () => { filter(b.dataset.cat); $('#templates').scrollIntoView({behavior: reduceMotion ? 'auto' : 'smooth'}); }));
+  // 같은 페이지 안 이동은 해시를 바꾸지 않음 (#edit/#guest 라우팅과 충돌 방지)
+  $$('.gallery a[href^="#"]').forEach(a => a.addEventListener('click', e => {
+    e.preventDefault(); const id = a.getAttribute('href').slice(1);
+    if (!id) window.scrollTo({top:0, behavior:'smooth'}); else document.getElementById(id).scrollIntoView({behavior: reduceMotion ? 'auto' : 'smooth'});
+  }));
+  filter('all');
+})();
+$$('[data-tpl]').forEach(b => b.addEventListener('click', () => {
+  const t = b.dataset.tpl;
+  if (t !== curTpl()){   // 템플릿을 바꾸면 포스터 문구만 그 템플릿 예시로, 나머지 정보는 유지
+    const prev = TPL[curTpl()];
+    setTemplate(t); $('#f-t1').value = TPL[t].t1; $('#f-t2').value = TPL[t].t2;
+    // 예시 문구를 그대로 쓰고 있었다면 새 템플릿 예시로 교체 (직접 쓴 내용은 유지)
+    if ($('#f-name').value === prev.name) $('#f-name').value = TPL[t].name;
+    if ($('#f-msg').value.trim() === prev.msg) $('#f-msg').value = TPL[t].msg;
+    render(); queueSave();
+  }
+  location.hash = 'edit';
+}));
+$('#backToGallery').addEventListener('click', () => { location.hash = ''; });
+window.addEventListener('hashchange', applyMode);
+
+setTemplate('homeparty');
+render(); updateTotal();
+const fontsReady = document.fonts ? document.fonts.ready : Promise.resolve();
+if (isGuestView()) document.body.classList.add('guestmode');
+else if (location.hash !== '#edit') document.body.classList.add('mode-gallery');
+renderAuth();
+Promise.all([fontsReady, connect().catch(() => false)]).then(() => {
+  applyMode();   // 모바일 편집 화면은 미리보기를 열 때 재생
+});
+</script>
+</body>
+</html>

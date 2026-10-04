@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>포스터 오프닝 프로토타입</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Nanum+Gothic+Coding:wght@400;700&family=IBM+Plex+Mono:ital,wght@1,400;1,500&family=Noto+Sans+KR:wght@500;700;900&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<style>
+/* ── 테마 토큰: 템플릿마다 이 값만 바꾼다 ── */
+:root{
+  --page:#FFD43B;        /* 풀블리드 배경 */
+  --poster:#E8603C;      /* 포스터 아트워크 바탕 */
+  --line:#FFD43B;        /* 리본 일러스트 */
+  --title:#FFFFFF;       /* 포스터 제목 */
+  --ink:#1C2B4D;         /* 본문 글자 */
+  --ink-soft:#44557A;
+  --stamp:#E8603C;       /* RSVP 버튼 */
+  --rule:rgba(28,43,77,.35);
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{background:#FFF4EC;min-height:100%}
+body{font-family:'Noto Sans KR',sans-serif;color:var(--ink);overflow-x:hidden}
+
+/* 배경 채움(프리미엄): 포스터 중심에서 퍼지는 원 */
+.bg{position:fixed;inset:0;background:var(--page);z-index:0;clip-path:circle(150% at 50% 32%)}
+
+.page{position:relative;z-index:1;max-width:430px;margin:0 auto;padding:72px 0 160px}
+
+
+/* ── 상단 고정 탭 ── */
+.tabs{position:fixed;top:0;left:0;right:0;z-index:40;display:flex;justify-content:center;gap:36px;padding:14px 0 0;
+  background:var(--page);border-bottom:1px solid var(--rule);transform:translateY(-100%);transition:transform .35s ease}
+.tabs.show{transform:none}
+.tabs a{font-size:14px;font-weight:700;color:var(--ink);text-decoration:none;padding-bottom:12px;border-bottom:3px solid transparent}
+.tabs a.on{border-color:var(--ink)}
+
+/* ── 포스터 ── */
+.brand{font-family:'IBM Plex Mono',monospace;font-style:normal;font-size:11px;letter-spacing:.14em;color:var(--ink);padding:0 24px 14px}
+.brand b{font-weight:500}
+.poster-wrap{padding:0 24px}
+.poster{position:relative;aspect-ratio:3/4;background:var(--poster);overflow:hidden;cursor:pointer;user-select:none}
+.poster-top{position:absolute;top:14px;left:16px;right:16px;display:flex;justify-content:space-between;
+  font-family:'Black Han Sans',sans-serif;font-size:15px;color:var(--title);letter-spacing:.04em}
+.ribbon{position:absolute;inset:6% 4% 4%;width:92%;height:90%}
+.ribbon path{fill:none;stroke:var(--line);stroke-width:13;stroke-linecap:round;stroke-linejoin:round}
+.title{position:absolute;left:0;right:0;top:44%;text-align:center;font-family:'Black Han Sans',sans-serif;
+  color:var(--title);font-size:min(19vw,82px);line-height:.98;letter-spacing:-.01em;text-shadow:0 3px 0 rgba(0,0,0,.08)}
+.title .ch{display:inline-block;will-change:transform}
+.sticker{position:absolute;width:34px;height:34px;will-change:transform}
+.glint{position:absolute;width:10px;height:10px;color:#fff;font-size:12px;line-height:10px;opacity:0;pointer-events:none}
+canvas.glitter{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+/* ── 선물상자 (1,000원 전용) ── */
+.poster{overflow:visible}
+.poster-inner{position:absolute;inset:0;background:var(--poster);overflow:hidden}
+.art{position:absolute;inset:0}
+.gift{position:absolute;inset:0;z-index:5;perspective:900px;display:none}
+.front{position:absolute;left:0;right:0;top:19%;bottom:0;border-radius:2px;
+  background:radial-gradient(circle,rgba(232,96,60,.2) 3px,transparent 3.5px) 0 0/22px 22px,
+             linear-gradient(180deg,#FFF6EF,#F7E4DA);
+  box-shadow:inset 0 10px 18px rgba(120,40,30,.12)}
+.lid{position:absolute;left:-4%;right:-4%;top:0;height:21%;border-radius:4px;
+  background:radial-gradient(circle,rgba(232,96,60,.2) 3px,transparent 3.5px) 6px 6px/22px 22px,
+             linear-gradient(180deg,#FFFBF7,#F1DDD2);
+  box-shadow:0 8px 14px rgba(90,20,30,.22)}
+.band{position:absolute;background:linear-gradient(90deg,#E9A800,#FFCC1F 35%,#FFE680 50%,#FFCC1F 65%,#E9A800)}
+.band-v{top:-1%;bottom:0;left:50%;width:13%}
+.band-h{left:-4%;right:-4%;top:55%;height:9%;background:linear-gradient(180deg,#E9A800,#FFCC1F 35%,#FFE680 50%,#FFCC1F 65%,#E9A800)}
+.bow{position:absolute;left:30%;width:40%;top:-11%;overflow:visible}
+.bow path{fill:none;stroke:#FFC61A;stroke-width:13;stroke-linecap:round;stroke-linejoin:round}
+.bow .loop-hi{stroke:#FFF1A8;stroke-width:4}
+.bow circle{fill:#E9A800}
+.hint{text-align:center;font-size:11px;color:var(--ink-soft);margin-top:10px;font-family:'Nanum Gothic Coding',monospace}
+
+/* ── 본문 블록 ── */
+.event-name{font-family:'Black Han Sans',sans-serif;font-size:40px;line-height:1.05;text-align:center;padding:30px 24px 0;color:var(--ink)}
+.block{text-align:center;padding:26px 24px}
+.rule{height:1px;background:var(--rule);margin:0 24px}
+.label{font-size:11px;font-weight:900;letter-spacing:.32em;margin-bottom:12px}
+.mono{font-family:'Nanum Gothic Coding',monospace;font-size:15px;line-height:1.9;color:var(--ink)}
+.mono i{font-family:'IBM Plex Mono',monospace;font-style:italic}
+.u{display:inline-block;border-bottom:1px solid var(--ink);padding-bottom:1px}
+.dday{display:inline-block;margin-top:12px;font-family:'Black Han Sans',sans-serif;font-size:22px;letter-spacing:.04em;
+  background:var(--ink);color:var(--page);padding:4px 14px 2px}
+.map{margin:16px auto 0;height:150px;border:1.5px solid var(--ink);position:relative;overflow:hidden;
+  background:
+   linear-gradient(90deg,transparent 48%,rgba(90,16,48,.12) 48% 52%,transparent 52%) 0 0/60px 60px,
+   linear-gradient(0deg,transparent 48%,rgba(90,16,48,.12) 48% 52%,transparent 52%) 0 0/60px 60px,
+   #FBD3E4}
+.map .pin{position:absolute;left:50%;top:44%;transform:translate(-50%,-100%);font-size:30px}
+.map small{position:absolute;bottom:6px;right:8px;font-size:10px;color:var(--ink-soft)}
+.btns{display:flex;gap:8px;justify-content:center;margin-top:12px;flex-wrap:wrap}
+.btns a{font-size:12px;font-weight:700;color:var(--ink);text-decoration:none;border:1.5px solid var(--ink);padding:7px 12px}
+.guest-count{font-family:'Black Han Sans',sans-serif;font-size:28px}
+.guest-sub{font-size:11px;letter-spacing:.3em;font-weight:700;color:var(--ink-soft);margin-top:6px}
+
+/* ── 떠 있는 우표형 RSVP ── */
+/* 하단 고정 CTA: 배경과 분리되는 페이드 + 단색 버튼 */
+.cta{position:fixed;left:0;right:0;bottom:0;z-index:30;padding:28px 20px calc(18px + env(safe-area-inset-bottom,0px));
+  background:linear-gradient(to top,var(--page) 55%,transparent);pointer-events:none}
+.stamp{pointer-events:auto;display:flex;align-items:center;justify-content:center;gap:10px;width:100%;max-width:390px;margin:0 auto;height:56px;
+  border:2px solid var(--ink);background:var(--stamp);color:#fff;font-family:'Black Han Sans',sans-serif;font-size:20px;letter-spacing:.03em;cursor:pointer;
+  box-shadow:4px 4px 0 var(--ink);transition:transform .12s,box-shadow .12s}
+.stamp svg{width:20px;height:20px}
+.stamp:active{transform:translate(3px,3px);box-shadow:1px 1px 0 var(--ink)}
+
+/* RSVP 시트 */
+.sheet-bg{position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:60;opacity:0;pointer-events:none;transition:opacity .25s}
+.sheet{position:fixed;left:50%;bottom:0;width:100%;max-width:430px;transform:translate(-50%,100%);z-index:61;
+  background:#FFF4EC;border-radius:18px 18px 0 0;padding:26px 24px calc(30px + env(safe-area-inset-bottom));transition:transform .3s ease;text-align:center}
+.open .sheet-bg{opacity:1;pointer-events:auto}.open .sheet{transform:translate(-50%,0)}
+.sheet h3{font-family:'Black Han Sans',sans-serif;font-weight:400;font-size:24px;margin-bottom:16px}
+.sheet .opts{display:flex;gap:8px}
+.sheet .opts button{flex:1;border:1.5px solid var(--ink);background:none;padding:14px 0;font:700 15px 'Noto Sans KR';color:var(--ink);cursor:pointer}
+.sheet .opts button:first-child{background:var(--ink);color:#fff}
+
+@media (prefers-reduced-motion:reduce){.tabs{transition:none}}
+</style>
+</head>
+<body>
+<div class="bg" id="bg"></div>
+
+
+<nav class="tabs" id="tabs">
+  <a href="#details" class="on" data-sec="details">행사 정보</a>
+  <a href="#guests" data-sec="guests">참석자</a>
+</nav>
+
+<main class="page">
+  <div class="brand">MOBILE <b>INVITATION</b></div>
+
+  <div class="poster-wrap">
+    <div class="poster" id="poster" aria-label="포스터, 탭하면 다시 재생">
+      <div class="poster-inner"><div class="art" id="art">
+      <div class="poster-top" id="posterTop"><span>피자</span><span>와인</span><span>보드게임</span></div>
+
+      <svg class="ribbon" viewBox="0 0 300 330" aria-hidden="true">
+        <path id="ribbon" d="M150 150 C 96 70, 22 78, 40 132 C 56 180, 122 172, 150 150 C 178 172, 244 180, 260 132 C 278 78, 204 70, 150 150 M150 150 C 128 196, 96 222, 70 300 M150 150 C 172 196, 204 222, 236 300 M150 150 C 140 210, 160 250, 150 318"/>
+      </svg>
+
+      <div class="title" id="title" data-text="금요일 밤|홈파티"></div>
+
+      <!-- 스티커: 보석, 별, 하트, 다이아 -->
+      <svg class="sticker" style="left:68%;top:10%" viewBox="0 0 40 40"><circle cx="20" cy="20" r="15" fill="#8ED8F8" stroke="#fff" stroke-width="3"/><circle cx="14" cy="14" r="4" fill="#fff" opacity=".8"/></svg>
+      <svg class="sticker" style="left:20%;top:23%" viewBox="0 0 40 40"><path d="M20 3l5 11 12 1-9 8 3 12-11-6-11 6 3-12-9-8 12-1z" fill="#FFD84D" stroke="#fff" stroke-width="2.5" stroke-linejoin="round"/></svg>
+      <svg class="sticker" style="left:9%;top:52%" viewBox="0 0 40 40"><path d="M20 35S4 25 4 14a8 8 0 0116-3 8 8 0 0116 3c0 11-16 21-16 21z" fill="#FF7FB0" stroke="#fff" stroke-width="2.5"/></svg>
+      <svg class="sticker" style="left:79%;top:62%" viewBox="0 0 40 40"><path d="M8 14l6-8h12l6 8-12 20z" fill="#C9B6FF" stroke="#fff" stroke-width="2.5" stroke-linejoin="round"/><path d="M8 14h24M14 6l6 8 6-8M20 14v20" stroke="#fff" stroke-width="1.5" fill="none"/></svg>
+
+      <span class="glint" style="left:76%;top:9%">✦</span>
+      <span class="glint" style="left:28%;top:22%">✦</span>
+      <span class="glint" style="left:16%;top:51%">✦</span>
+      <span class="glint" style="left:86%;top:61%">✦</span>
+      </div></div>
+
+      <!-- 선물상자 (1,000원): 리본을 풀고 → 뚜껑이 날아가고 → 앞판이 넘어가며 포스터 노출 -->
+      <div class="gift" id="gift" aria-hidden="true">
+        <div class="front" id="front"></div>
+        <div class="lid" id="lid"></div>
+        <div class="band band-v" id="bandV"></div>
+        <div class="band band-h" id="bandH"></div>
+        <svg class="bow" id="bow" viewBox="0 0 160 100">
+          <path id="tailL" d="M80 52 L56 98"/>
+          <path id="tailR" d="M80 52 L104 98"/>
+          <path class="loop" id="loopL" d="M80 50 C 60 18, 16 12, 20 42 C 23 66, 62 62, 80 50"/>
+          <path class="loop" id="loopR" d="M80 50 C 100 18, 144 12, 140 42 C 137 66, 98 62, 80 50"/>
+          <path class="loop loop-hi" d="M70 40 C 56 28, 34 26, 32 38"/>
+          <path class="loop loop-hi" d="M90 40 C 104 28, 126 26, 128 38"/>
+          <circle id="knot" cx="80" cy="50" r="11"/>
+        </svg>
+      </div>
+
+      <canvas class="glitter" id="glitter" style="z-index:6"></canvas>
+    </div>
+  </div>
+
+  <section id="details">
+    <h1 class="event-name">헤이미네 금요일<br>홈파티</h1>
+
+    <div class="block">
+      <div class="label">HOSTED BY</div>
+      <div class="mono"><i>헤이미</i></div>
+    </div>
+    <div class="rule"></div>
+
+    <div class="block">
+      <div class="label">WHEN</div>
+      <div class="mono"><span class="u">2026년 10월 30일 금요일</span><br><span class="u">저녁 7:00</span></div>
+      <div class="dday" id="dday">D-26</div>
+    </div>
+    <div class="rule"></div>
+
+    <div class="block">
+      <div class="label">WHERE</div>
+      <div class="mono">헤이미네 집<br>서울시 마포구 연남로 12<br>3층 302호</div>
+      <div class="map"><span class="pin">📍</span><small>지도 영역(카카오맵)</small></div>
+      <div class="btns">
+        <a href="https://map.naver.com/p/search/%EC%84%9C%EC%9A%B8%EC%8B%9C%20%EB%A7%88%ED%8F%AC%EA%B5%AC%20%EC%97%B0%EB%82%A8%EB%A1%9C%2012" target="_blank">네이버 지도</a>
+        <a href="https://map.kakao.com/?q=%EC%84%9C%EC%9A%B8%EC%8B%9C%20%EB%A7%88%ED%8F%AC%EA%B5%AC%20%EC%97%B0%EB%82%A8%EB%A1%9C%2012" target="_blank">카카오맵</a>
+        <a href="https://www.google.com/maps/search/?api=1&query=%EC%84%9C%EC%9A%B8%EC%8B%9C%20%EB%A7%88%ED%8F%AC%EA%B5%AC%20%EC%97%B0%EB%82%A8%EB%A1%9C%2012" target="_blank">구글 지도</a>
+      </div>
+    </div>
+    <div class="rule"></div>
+
+    <div class="block">
+      <div class="mono">맛있는 피자와 와인 준비해둘게요.<br>편하게 와서 같이 놀아요!</div>
+    </div>
+  </section>
+
+  <div class="rule" style="margin:20px 25%"></div>
+
+  <section id="guests" class="block">
+    <div class="label">GUEST LIST</div>
+    <div class="guest-count">12명 참석</div>
+    <div class="guest-sub">3명 응답 대기</div>
+  </section>
+</main>
+
+<div class="cta"><button class="stamp" id="stamp">참석 여부 알려주기<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="square" aria-hidden="true"><path d="M4 10h11M11 5l5 5-5 5"/></svg></button></div>
+
+<div id="sheetRoot">
+  <div class="sheet-bg" id="sheetBg"></div>
+  <div class="sheet" role="dialog" aria-label="참석 응답">
+    <h3>오실 수 있나요?</h3>
+    <div class="opts"><button>참석</button><button>미정</button><button>불참</button></div>
+  </div>
+</div>
+
+<script>
+/* ───────── 설정 ───────── */
+const EVENT_DATE = '2026-10-30';
+const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+let tier = reduceMotion ? 'free' : 'premium';
+
+/* D-day */
+(() => {
+  const d = Math.ceil((new Date(EVENT_DATE + 'T00:00:00') - new Date(new Date().toDateString())) / 864e5);
+  document.getElementById('dday').textContent = d > 0 ? `D-${d}` : d === 0 ? 'D-DAY' : '지난 행사';
+})();
+
+/* 제목을 글자 단위로 쪼갬 */
+const titleEl = document.getElementById('title');
+titleEl.innerHTML = titleEl.dataset.text.split('|')
+  .map(line => [...line].map(c => c === ' ' ? '<span class="ch">&nbsp;</span>' : `<span class="ch">${c}</span>`).join(''))
+  .join('<br>');
+
+const $ = s => document.querySelector(s), $$ = s => [...document.querySelectorAll(s)];
+const bg = $('#bg'), poster = $('#poster'), ribbon = $('#ribbon'), chars = $$('.title .ch'),
+      stickers = $$('.sticker'), glints = $$('.glint'), posterTop = $('#posterTop'), art = $('#art');
+const ribbonLen = ribbon.getTotalLength();
+// 선물상자 요소
+const gift = $('#gift'), lid = $('#lid'), front = $('#front'), bandV = $('#bandV'), bandH = $('#bandH'),
+      bow = $('#bow'), knot = $('#knot'), tailL = $('#tailL'), tailR = $('#tailR'), bowLoops = $$('#bow .loop');
+const giftParts = [gift, lid, front, bandV, bandH, bow, knot, tailL, tailR, ...bowLoops];
+
+/* ───────── 글리터 버스트 (canvas) ───────── */
+const cv = $('#glitter'), cx = cv.getContext('2d');
+let parts = [], rafId = null;
+function sizeCanvas(){ const r = poster.getBoundingClientRect(), dpr = devicePixelRatio || 1;
+  cv.width = r.width * dpr; cv.height = r.height * dpr; cx.setTransform(dpr,0,0,dpr,0,0); }
+function burst(yRatio = .5){
+  sizeCanvas();
+  const w = cv.width / (devicePixelRatio||1), h = cv.height / (devicePixelRatio||1);
+  const colors = ['#FFE27A','#FFFFFF','#FF9A6B','#9EE3FF','#FFD24D'];
+  parts = Array.from({length: 140}, () => {
+    const a = Math.random() * Math.PI * 2, s = 3 + Math.random() * 7;
+    return { x: w/2, y: h*yRatio, vx: Math.cos(a)*s, vy: Math.sin(a)*s - 3, life: 1,
+      decay: .008 + Math.random()*.012, size: 2 + Math.random()*4, rot: Math.random()*6,
+      vr: (Math.random()-.5)*.4, c: colors[(Math.random()*colors.length)|0], star: Math.random() < .3 };
+  });
+  cancelAnimationFrame(rafId); tick();
+}
+function tick(){
+  const w = cv.width, h = cv.height; cx.clearRect(0,0,w,h);
+  parts.forEach(p => {
+    p.vx *= .97; p.vy = p.vy * .97 + .18; p.x += p.vx; p.y += p.vy; p.rot += p.vr; p.life -= p.decay;
+    if (p.life <= 0) return;
+    cx.save(); cx.globalAlpha = Math.min(1, p.life * 1.4) * (.6 + .4*Math.sin(p.life*30));
+    cx.translate(p.x, p.y); cx.rotate(p.rot); cx.fillStyle = p.c;
+    if (p.star){ cx.beginPath(); for (let i=0;i<4;i++){ cx.rotate(Math.PI/2); cx.moveTo(0,0); cx.lineTo(p.size*1.6,0);} cx.strokeStyle=p.c; cx.lineWidth=1.4; cx.stroke(); }
+    else cx.fillRect(-p.size/2, -p.size/4, p.size, p.size/2);
+    cx.restore();
+  });
+  parts = parts.filter(p => p.life > 0);
+  if (parts.length) rafId = requestAnimationFrame(tick); else cx.clearRect(0,0,w,h);
+}
+
+/* ───────── 반짝임 루프 (애니메이션 끝난 뒤 계속) ───────── */
+let loops = [];
+function sparkleLoop(){
+  stickers.forEach((s,i) => loops.push(gsap.to(s, {scale:1.12, rotation:i%2?8:-8, duration:.7+i*.15, ease:'sine.inOut', yoyo:true, repeat:-1})));
+  glints.forEach((g,i) => loops.push(gsap.fromTo(g, {opacity:0, scale:.3}, {opacity:1, scale:1.3, duration:.35, ease:'power1.out', yoyo:true, repeat:-1, repeatDelay:1.2+i*.5, delay:i*.4})));
+}
+
+/* ───────── 재생 ───────── */
+let tl;
+function reset(){
+  tl && tl.kill(); loops.forEach(t => t.kill()); loops = []; parts = [];
+  gsap.killTweensOf([bg, poster, posterTop, ribbon, art, ...chars, ...stickers, ...glints, ...giftParts]);
+  gsap.set(giftParts, {clearProps:'transform,opacity'});
+  gsap.set(gift, {display: tier === 'premium' ? 'block' : 'none'});
+  gsap.set(bandV, {xPercent:-50});
+  bowLoops.forEach(l => { const n = l.getTotalLength(); gsap.set(l, {strokeDasharray:n, strokeDashoffset:0}); });
+  gsap.set(art, {opacity:1});
+  gsap.set(bg, {clipPath:'circle(150% at 50% 32%)'});
+  gsap.set(poster, {opacity:1, scale:1, y:0});
+  gsap.set(posterTop, {opacity:1, y:0});
+  gsap.set(ribbon, {strokeDasharray: ribbonLen, strokeDashoffset: 0});
+  gsap.set(chars, {opacity:1, y:0, scale:1, rotation:0});
+  gsap.set(stickers, {opacity:1, scale:1, rotation:0, transformOrigin:'50% 50%'});
+  gsap.set(glints, {opacity:0});
+}
+
+function play(){
+  reset();
+  tl = gsap.timeline();
+
+  if (tier === 'free'){
+    // 무료: 포스터 페이드인, 스티커 고정
+    tl.from(poster, {opacity:0, y:14, duration:.8, ease:'power2.out'});
+    return;
+  }
+
+  if (tier === 'premium'){
+    // 0) 배경 채움 + 선물상자 등장
+    gsap.set(art, {opacity:0});
+    tl.fromTo(bg, {clipPath:'circle(0% at 50% 32%)'}, {clipPath:'circle(150% at 50% 32%)', duration:.8, ease:'power3.inOut'})
+      .from(gift, {y:-60, opacity:0, scale:.88, rotation:-4, duration:.7, ease:'back.out(1.7)'}, '-=.35')
+      // 들썩들썩: 안에 뭔가 있다는 예고
+      .to(gift, {rotation:2.5, duration:.07, yoyo:true, repeat:5, ease:'sine.inOut'}, '+=.15')
+      .to(gift, {rotation:0, duration:.07})
+
+      // 1) 분홍 리본 풀기: 꼬리 당김 → 매듭 풀림 → 고리가 풀려 사라짐 → 띠가 스르륵 빠짐
+      .to([tailL, tailR], {y:7, duration:.14, yoyo:true, repeat:1, ease:'power1.inOut'}, '+=.1')
+      .to(knot, {scale:0, svgOrigin:'80 50', duration:.25, ease:'back.in(2.5)'})
+      .to(bowLoops, {strokeDashoffset:(i, el) => el.getTotalLength(), duration:.55, ease:'power2.in', stagger:.04}, '<')
+      .to(tailL, {rotation:-40, y:46, opacity:0, svgOrigin:'80 52', duration:.55, ease:'power2.in'}, '<.08')
+      .to(tailR, {rotation:40, y:46, opacity:0, svgOrigin:'80 52', duration:.55, ease:'power2.in'}, '<')
+      .to(bandH, {scaleX:0, duration:.45, ease:'power3.in'}, '-=.3')
+      .to(bandV, {scaleY:0, transformOrigin:'50% 0%', duration:.5, ease:'power3.in'}, '<.06')
+      .set(bow, {opacity:0})
+
+      // 2) 상자 열림: 뚜껑이 들썩 → 날아감, 앞판이 앞으로 넘어가며 포스터 노출
+      .set(art, {opacity:1})
+      .to(lid, {y:-26, rotation:-6, duration:.22, ease:'power2.out'}, '+=.05')
+      .to(lid, {y:-320, x:70, rotation:-38, opacity:0, duration:.7, ease:'power2.in'})
+      .call(burst, [.12], '<.05')
+      .to(front, {rotationX:-105, transformPerspective:900, transformOrigin:'50% 100%', opacity:0, duration:.75, ease:'power2.in'}, '<.05')
+      .set(gift, {display:'none'})
+
+      // 3) 포스터 속 연출: 일러스트 드로잉 → (아래 공통) 타이포 → 스티커
+      .fromTo(ribbon, {strokeDashoffset: ribbonLen}, {strokeDashoffset: 0, duration:1, ease:'power2.inOut'}, '-=.55')
+      .from(posterTop.children, {opacity:0, y:-10, stagger:.08, duration:.3}, '<.2');
+  } else {
+    tl.from(poster, {opacity:0, y:10, duration:.45, ease:'power2.out'});
+  }
+
+  // 3) 제목 글자가 한 자씩 튀어오름 (500원·1,000원)
+  tl.from(chars, {opacity:0, y:70, scale:.3, rotation:() => gsap.utils.random(-25,25), duration:.55, ease:'back.out(2.6)', stagger:.07},
+          tier === 'premium' ? '-=.7' : '>-.1');
+
+  // 5) 글리터 버스트 (1,000원)
+  if (tier === 'premium') tl.call(burst, [.5], '-=.25');
+
+  // 4) 스티커 팝인 → 반짝임 루프
+  tl.from(stickers, {scale:0, rotation:-120, opacity:0, duration:.7, ease:'elastic.out(1,.45)', stagger:.12}, '-=.35')
+    .call(sparkleLoop);
+}
+
+/* ───────── 인터랙션 ───────── */
+poster.addEventListener('click', play);
+
+// 포스터를 지나치면 상단 탭 고정 표시
+const tabs = $('#tabs');
+new IntersectionObserver(([e]) => tabs.classList.toggle('show', !e.isIntersecting && e.boundingClientRect.top < 0))
+  .observe(poster);
+// 현재 섹션 밑줄
+const secObs = new IntersectionObserver(es => es.forEach(e => {
+  if (e.isIntersecting) $$('.tabs a').forEach(a => a.classList.toggle('on', a.dataset.sec === e.target.id));
+}), {rootMargin:'-45% 0px -50% 0px'});
+['details','guests'].forEach(id => secObs.observe(document.getElementById(id)));
+
+// RSVP 시트
+const root = $('#sheetRoot');
+$('#stamp').addEventListener('click', () => root.classList.add('open'));
+$('#sheetBg').addEventListener('click', () => root.classList.remove('open'));
+$$('.sheet .opts button').forEach(b => b.addEventListener('click', () => root.classList.remove('open')));
+
+// 폰트 로딩 후 첫 재생
+(document.fonts ? document.fonts.ready : Promise.resolve()).then(play);
+</script>
+</body>
+</html>
