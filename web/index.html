@@ -1239,19 +1239,15 @@ function renderDrafts(rows) {
       </div>
     </div>`;
   }).join('');
-  grid.querySelectorAll('.dc-edit-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const row = rows.find(r => r.id === btn.dataset.edit);
-      if (!row) return;
+  [...grid.querySelectorAll('.draft-card')].forEach((card, i) => {
+    const row = rows[i];
+    if (!row) return;
+    card.querySelector('.dc-edit-btn').addEventListener('click', () => {
       sync.invite = { id: row.id, slug: row.slug, published: row.published };
-      applyData({ ...row.data, tpl: row.tpl, tier: row.tier });
+      applyData({ ...row.data, tpl: row.tpl || row.data?.tpl, tier: row.tier || row.data?.tier });
       location.hash = 'edit';
     });
-  });
-  grid.querySelectorAll('.dc-del-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const row = rows.find(r => r.id === btn.dataset.del);
-      if (!row) return;
+    card.querySelector('.dc-del-btn').addEventListener('click', () => {
       openConfirm(row.data?.name || '이 초대장', async () => {
         const { error } = await SB.from('invites').delete().eq('id', row.id);
         if (error) { toast('삭제하지 못했어요. 다시 시도해 주세요'); return; }
@@ -1337,7 +1333,7 @@ async function connectGuest(){
   const {data, error} = await SB.rpc('get_invite', {p_slug: SLUG});
   const row = Array.isArray(data) ? data[0] : data;
   if (error || !row){ $('#expired').classList.add('show'); return; }
-  applyData({...row.data, tpl: row.tpl, tier: row.tier});
+  applyData({...row.data, tpl: row.tpl || row.data?.tpl, tier: row.tier || row.data?.tier});
   if (row.data && row.data.name) document.title = row.data.name;
   try {
     const mine = JSON.parse(localStorage.getItem('rsvp_' + SLUG) || 'null');
@@ -1362,7 +1358,7 @@ async function connectHost(){
   }
   if (!sync.invite) {
     const {data} = await SB.from('invites').select('id, slug, published, data, tpl, tier').eq('owner', sync.user.id).order('updated_at', {ascending:false}).limit(1);
-    if (data && data[0]){ sync.invite = data[0]; applyData({...data[0].data, tpl: data[0].tpl, tier: data[0].tier}); setSave('저장됨'); }
+    if (data && data[0]){ sync.invite = data[0]; applyData({...data[0].data, tpl: data[0].tpl || data[0].data?.tpl, tier: data[0].tier || data[0].data?.tier}); setSave('저장됨'); }
     else setSave('로그인됨 · 입력하면 자동 저장돼요');
   }
   renderShare(); loadResponses();
