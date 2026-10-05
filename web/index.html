@@ -212,6 +212,24 @@ body.mode-gallery .app,body.mode-gallery .mobile-pv{display:none!important}
 .thumb-wine{position:relative;width:100%;aspect-ratio:3/4;overflow:hidden;container-type:inline-size;transition:transform .3s ease;box-shadow:0 6px 14px rgba(58,30,20,.2)}
 .tpl:not([disabled]):hover .thumb-wine{transform:rotate(-2deg) scale(1.03)}
 
+/* ───────── 템플릿 3: 웨딩 ───────── */
+.gframe[data-tpl="wedding"]{--page:#EEF2FF;--ink:#1E3A5F;--ink-soft:#5070A0;--stamp:#2C5F8A;--rule:rgba(30,58,95,.18);--title:#1E3A5F;--display:'Cormorant Garamond','Gowun Batang',serif;--mono:'Cormorant Garamond','Gowun Batang',serif}
+.gframe[data-tpl="wedding"] #art,.gframe[data-tpl="wedding"] #gift,.gframe[data-tpl="wedding"] #curtain{display:none!important}
+.gframe:not([data-tpl="wedding"]) #artWedding{display:none}
+.gframe[data-tpl="wedding"] .event-name{font-weight:400;font-style:italic}
+.gframe[data-tpl="wedding"] .label{font-family:'Cormorant Garamond',serif;font-style:italic;letter-spacing:.15em}
+.gframe[data-tpl="wedding"] .mono{font-size:15px;letter-spacing:.06em}
+.gframe[data-tpl="wedding"] .dday{font-weight:400;letter-spacing:.1em}
+.gframe[data-tpl="wedding"] .rsvp-q{font-style:italic;font-weight:400}
+.gframe[data-tpl="wedding"] .g-stamp{font-style:italic;letter-spacing:.08em}
+.art-wedding{position:absolute;inset:0;container-type:inline-size}
+.art-wedding svg,.thumb-wedding svg{position:absolute;inset:0;width:100%;height:100%}
+.wd-title{position:absolute;left:0;right:0;top:43%;text-align:center;pointer-events:none}
+.wd1{display:block;font-family:'Cormorant Garamond','Gowun Batang',serif;font-style:italic;font-size:8cqw;color:#1E3A5F;letter-spacing:.08em;line-height:1.8}
+.wd2{display:block;font-family:'Cormorant Garamond','Gowun Batang',serif;font-style:italic;font-size:20cqw;color:#1E3A5F;letter-spacing:.02em;line-height:1.05}
+.wd2 .ch{display:inline-block}
+.thumb-wedding{position:relative;width:100%;aspect-ratio:3/4;overflow:hidden;container-type:inline-size;transition:transform .3s ease;box-shadow:0 6px 14px rgba(30,58,95,.15)}
+.tpl:not([disabled]):hover .thumb-wedding{transform:rotate(-2deg) scale(1.03)}
 
 /* 와인 1,000원: 커튼이 양옆으로 걷힘 */
 .curtain{position:absolute;inset:0;z-index:5;display:none;overflow:hidden;pointer-events:none}
@@ -442,7 +460,7 @@ canvas.glitter{position:absolute;inset:0;width:100%;height:100%;pointer-events:n
 
   <section class="sec" id="templates">
     <div class="sec-head"><h2>템플릿</h2><span id="tplCount"></span></div>
-    <div class="filters" role="group" aria-label="모임 종류로 거르기"><button type="button" class="flt on" data-filter="all">전체</button><button type="button" class="flt" data-filter="party">홈파티</button><button type="button" class="flt" data-filter="birthday">생일</button><button type="button" class="flt" data-filter="wine">와인·술자리</button><button type="button" class="flt" data-filter="brunch">브런치</button><button type="button" class="flt" data-filter="yearend">송년회</button><button type="button" class="flt" data-filter="house">집들이</button><button type="button" class="flt" data-filter="dol">돌잔치</button></div>
+    <div class="filters" role="group" aria-label="모임 종류로 거르기"><button type="button" class="flt on" data-filter="all">전체</button><button type="button" class="flt" data-filter="party">홈파티</button><button type="button" class="flt" data-filter="birthday">생일</button><button type="button" class="flt" data-filter="wine">와인·술자리</button><button type="button" class="flt" data-filter="wedding">웨딩</button><button type="button" class="flt" data-filter="brunch">브런치</button><button type="button" class="flt" data-filter="yearend">송년회</button><button type="button" class="flt" data-filter="house">집들이</button><button type="button" class="flt" data-filter="dol">돌잔치</button></div>
     <div class="tpl-grid">
     <button class="tpl" type="button" data-tpl="homeparty" data-cats="party birthday house" aria-label="홈파티 포스터 템플릿 선택">
       <div class="tpl-frame">
@@ -465,9 +483,14 @@ canvas.glitter{position:absolute;inset:0;width:100%;height:100%;pointer-events:n
       </div>
       <div class="tpl-info"><b>와인 파티</b><span>와인 모임, 브런치, 송년회</span><div class="tpl-tags"><i class="hot">커튼 &amp; 건배 연출</i><i>무료부터</i></div></div>
     </button>
-    <button class="tpl" type="button" disabled data-cats="birthday dol" aria-label="템플릿 3, 준비 중">
-      <div class="tpl-frame"><div class="ph">준비 중</div></div>
-      <div class="tpl-info"><b>템플릿 3</b><span>준비 중인 디자인</span><div class="tpl-tags"><i>곧 추가돼요</i></div></div>
+    <button class="tpl" type="button" data-tpl="wedding" data-cats="wedding" aria-label="웨딩 초대장 템플릿 선택">
+      <div class="tpl-frame" style="background:#EEF2FF">
+        <div class="thumb-wedding" aria-hidden="true">
+          <div id="weddingThumb" style="position:absolute;inset:0"></div>
+          <div class="wd-title"><span class="wd1">우리의</span><span class="wd2">Wedding</span></div>
+        </div>
+      </div>
+      <div class="tpl-info"><b>웨딩 초대장</b><span>결혼식, 피로연</span><div class="tpl-tags"><i class="hot">레이스 연출</i><i>무료부터</i></div></div>
     </button>
     <button class="tpl" type="button" disabled data-cats="yearend house" aria-label="템플릿 4, 준비 중">
       <div class="tpl-frame"><div class="ph">준비 중</div></div>
@@ -617,6 +640,10 @@ canvas.glitter{position:absolute;inset:0;width:100%;height:100%;pointer-events:n
                 <div class="poster-inner art-wine" id="artWine" aria-hidden="true">
                   <div id="wineSvg" style="position:absolute;inset:0"></div>
                   <div class="w-title"><span class="w1" id="wt1"></span><span class="w2" id="wt2"></span></div>
+                </div>
+                <div class="poster-inner art-wedding" id="artWedding" aria-hidden="true">
+                  <div id="weddingSvg" style="position:absolute;inset:0"></div>
+                  <div class="wd-title"><span class="wd1" id="wt1w"></span><span class="wd2" id="wt2w"></span></div>
                 </div>
                 <div class="curtain" id="curtain" aria-hidden="true">
                   <div class="cur cur-l" id="curL"></div><div class="cur cur-r" id="curR"></div><div class="cur-top" id="curTop"></div>
@@ -787,6 +814,8 @@ function dday(iso){
 function setTitle(){
   $('#wt1').textContent = val('f-t1');
   $('#wt2').innerHTML = [...val('f-t2')].map(c => `<span class="ch">${c === ' ' ? '&nbsp;' : esc(c)}</span>`).join('');
+  $('#wt1w').textContent = val('f-t1');
+  $('#wt2w').innerHTML = [...val('f-t2')].map(c => `<span class="ch">${c === ' ' ? '&nbsp;' : esc(c)}</span>`).join('');
   const lines = [val('f-t1'), val('f-t2')].filter(Boolean);
   $('#title').innerHTML = lines.map(l => [...l].map(c => `<span class="ch">${c === ' ' ? '&nbsp;' : c.replace(/[<>&]/g,'')}</span>`).join('')).join('<br>');
 }
@@ -935,7 +964,9 @@ const TPL = {
   homeparty: {t1:'금요일 밤', t2:'홈파티', words:true, name:'헤이미네 금요일 홈파티', msg:'맛있는 피자와 와인 준비해둘게요.\n편하게 와서 같이 놀아요!',
     basic:['반짝 연출','제목 글자가 튀어 오르고 스티커가 반짝여요'], premium:['선물상자 연출','리본을 풀고 상자가 열리며 포스터가 나타나요']},
   wine: {t1:'Wine &', t2:'Party', words:false, name:'헤이미네 와인 파티', msg:'좋아하는 와인 한 병씩 들고 와요.\n천천히 한 잔 하면서 이야기 나눠요.',
-    basic:['찰랑 연출','와인이 찰랑이고 제목이 떠올라요'], premium:['커튼 & 건배 연출','커튼이 양옆으로 걷히고, 잔이 부딪히며 와인이 차올라요']}
+    basic:['찰랑 연출','와인이 찰랑이고 제목이 떠올라요'], premium:['커튼 & 건배 연출','커튼이 양옆으로 걷히고, 잔이 부딪히며 와인이 차올라요']},
+  wedding: {t1:'우리의', t2:'결혼합니다', words:false, name:'김지수 & 이민준의 결혼식', msg:'저희 두 사람이 하나가 되는 날에\n소중한 분들을 초대합니다.',
+    basic:['플로럴 연출','꽃장식이 피어나며 초대장이 펼쳐져요'], premium:['레이스 블루밍 연출','레이스 테두리가 그려지고 꽃장식이 피어올라요']}
 };
 const curTpl = () => gframe.dataset.tpl || 'homeparty';
 function setTemplate(t){
@@ -976,6 +1007,47 @@ function wineSVG(p, ids){
 }
 $('#wineSvg').innerHTML = wineSVG('pw', true);
 $('#wineThumb').innerHTML = wineSVG('tw', false);
+
+/* ── 웨딩 SVG ── */
+function weddingSVG(p, withIds) {
+  const i = n => withIds ? ` id="${p}${n}"` : '';
+  const bO = 2*(272+372), bI = 2*(260+360), rC = +(2*Math.PI*70).toFixed(1);
+  function lf(cx,cy,tx,ty){
+    const mx=(cx+tx)/2,my=(cy+ty)/2,pdx=-(ty-cy),pdy=tx-cx,pn=Math.sqrt(pdx*pdx+pdy*pdy)||1,ox=pdx/pn*5,oy=pdy/pn*5,f=n=>n.toFixed(1);
+    return `<path d="M${f(cx)} ${f(cy)} Q${f(mx+ox)} ${f(my+oy)} ${f(tx)} ${f(ty)} Q${f(mx-ox)} ${f(my-oy)} ${f(cx)} ${f(cy)}" fill="#1E3A5F"/>`;
+  }
+  function corn(cx,cy,dx,dy,nm){
+    return `<g${withIds?` id="${p}${nm}"`:''} opacity=".55">
+      ${lf(cx,cy,cx+dx*14,cy+dy*3)}${lf(cx,cy,cx+dx*3,cy+dy*14)}${lf(cx,cy,cx+dx*10,cy+dy*10)}
+      <circle cx="${cx}" cy="${cy}" r="2.2" fill="#1E3A5F"/>
+      <circle cx="${+(cx+dx*15.5).toFixed(1)}" cy="${+(cy+dy*3.5).toFixed(1)}" r="1.2" fill="#1E3A5F" opacity=".5"/>
+      <circle cx="${+(cx+dx*3.5).toFixed(1)}" cy="${+(cy+dy*15.5).toFixed(1)}" r="1.2" fill="#1E3A5F" opacity=".5"/>
+    </g>`;
+  }
+  const sp = [[143,34],[150,32],[157,34]].map(([tx,ty])=>lf(150,48,tx,ty)).join('');
+  return `<svg viewBox="0 0 300 400" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+    <rect width="300" height="400" fill="#EEF2FF"/>
+    <rect${i('b1')} x="14" y="14" width="272" height="372" rx="2" fill="none" stroke="#1E3A5F" stroke-width="1.2" opacity=".28" stroke-dasharray="${bO}" stroke-dashoffset="0"/>
+    <rect${i('b2')} x="20" y="20" width="260" height="360" rx="1" fill="none" stroke="#1E3A5F" stroke-width=".5" opacity=".18" stroke-dasharray="${bI}" stroke-dashoffset="0"/>
+    <circle${i('rg')} cx="150" cy="196" r="70" fill="none" stroke="#1E3A5F" stroke-width=".8" opacity=".18" stroke-dasharray="4 2.5" stroke-dashoffset="0"/>
+    ${corn(34,34,1,1,'cTL')}${corn(266,34,-1,1,'cTR')}${corn(34,366,1,-1,'cBL')}${corn(266,366,-1,-1,'cBR')}
+    <g${i('sp')} opacity=".5">${sp}
+      <circle cx="150" cy="48" r="2" fill="#1E3A5F"/>
+      <line x1="122" y1="50" x2="143" y2="50" stroke="#1E3A5F" stroke-width=".8" opacity=".4"/>
+      <line x1="157" y1="50" x2="178" y2="50" stroke="#1E3A5F" stroke-width=".8" opacity=".4"/>
+      <circle cx="118" cy="50" r="1.3" fill="#1E3A5F" opacity=".4"/>
+      <circle cx="182" cy="50" r="1.3" fill="#1E3A5F" opacity=".4"/>
+    </g>
+  </svg>`;
+}
+$('#weddingSvg').innerHTML = weddingSVG('pw', true);
+$('#weddingThumb').innerHTML = weddingSVG('tw', false);
+const WD = {
+  b1: $('#pwb1'), b2: $('#pwb2'), ring: $('#pwrg'),
+  corners: ['pwcTL','pwcTR','pwcBL','pwcBR'].map(id => $('#'+id)),
+  sprig: $('#pwsp'), art: $('#artWedding')
+};
+
 const W = {
   glasses: [0,1,2].map(i => $('#pwg' + i)), liq: [0,1,2].map(i => $('#pwl' + i)),
   waves: $$('#wineSvg .wv'), band: $('#pwband'), wave2: $('#wineSvg .wv2'), outlines: $$('#wineSvg .wo'), bubbles: $$('#wineSvg .wb'),
@@ -1058,6 +1130,7 @@ function play(){
   gsap.set(glints, {opacity:0});
 
   if (curTpl() === 'wine'){ gsap.set(gift, {display:'none'}); playWine(t); return; }
+  if (curTpl() === 'wedding'){ gsap.set(gift, {display:'none'}); gsap.set(CUR.root, {display:'none'}); playWedding(t); return; }
   gsap.set('#curtain', {display:'none'});
   tl = gsap.timeline();
   if (t === 'free'){ tl.from(poster, {opacity:0, y:14, duration:.8, ease:'power2.out'}); return; }
@@ -1185,7 +1258,7 @@ $('#saveDraft').addEventListener('click', async () => {
   if (!SB) { toast('config.js에 서버 정보를 넣으면 저장할 수 있어요'); return; }
   if (!sync.user) { openAuthModal('saveDraft'); return; }
   const ok = await saveNow();
-  if (ok) toast('임시저장했어요');
+  if (ok) toast('변경내용이 저장되었어요');
 });
 
 /* 로그인 모달 */
