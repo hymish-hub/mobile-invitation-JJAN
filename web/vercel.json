@@ -1,5 +1,5 @@
 {
   "cleanUrls": true,
-  "rewrites": [{ "source": "/i/:slug", "destination": "/index.html" }],
+  "rewrites": [{ "source": "/i/:slug", "destination": "/api/i/:slug" }],
   "headers": [{ "source": "/config.js", "headers": [{ "key": "Cache-Control", "value": "no-cache" }] }]
 }
