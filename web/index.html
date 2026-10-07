@@ -1113,6 +1113,47 @@ function playWine(t){
   }
 }
 
+function playWedding(t) {
+  const chars = $$('#wt2w .ch'), w1 = $('#wt1w');
+  gsap.killTweensOf([WD.art, WD.b1, WD.b2, WD.ring, ...WD.corners, WD.sprig, w1, ...chars]);
+  gsap.set(WD.art, {opacity:1});
+  const bO = 2*(272+372), bI = 2*(260+360), rC = +(2*Math.PI*70).toFixed(1);
+  gsap.set(WD.b1, {strokeDasharray:bO, strokeDashoffset:0, opacity:.28});
+  gsap.set(WD.b2, {strokeDasharray:bI, strokeDashoffset:0, opacity:.18});
+  gsap.set(WD.ring, {strokeDasharray:'4 2.5', strokeDashoffset:0, opacity:.18});
+  gsap.set(WD.corners, {opacity:.55});
+  gsap.set(WD.sprig, {opacity:.5});
+  gsap.set([w1, ...chars], {opacity:1, y:0, filter:'blur(0px)'});
+  tl = gsap.timeline();
+  if (t === 'free') { tl.from(poster, {opacity:0, y:14, duration:.8, ease:'power2.out'}); return; }
+  gsap.set([w1, ...chars], {opacity:0, y:18, filter:'blur(8px)'});
+  gsap.set(WD.b1, {strokeDashoffset:bO, opacity:.28});
+  gsap.set(WD.b2, {strokeDashoffset:bI, opacity:.18});
+  gsap.set(WD.ring, {strokeDashoffset:rC, opacity:.18});
+  gsap.set(WD.corners, {opacity:0, scale:.6, transformOrigin:'center'});
+  gsap.set(WD.sprig, {opacity:0, y:-8});
+  if (t === 'premium') {
+    tl.fromTo(bg, {clipPath:'circle(0% at 50% 40%)'}, {clipPath:'circle(150% at 50% 40%)', duration:.9, ease:'power3.inOut'})
+      .from(poster, {scale:.96, duration:.7, ease:'power2.out'}, '<.1')
+      .to(WD.b1, {strokeDashoffset:0, duration:1.2, ease:'power2.inOut'}, '-=.3')
+      .to(WD.b2, {strokeDashoffset:0, duration:.9, ease:'power2.inOut'}, '-=.9')
+      .to(WD.corners, {opacity:.55, scale:1, duration:.5, ease:'back.out(1.8)', stagger:.07}, '-=.4')
+      .to(WD.sprig, {opacity:.5, y:0, duration:.5, ease:'power2.out'}, '-=.3')
+      .to(WD.ring, {strokeDashoffset:0, duration:1.1, ease:'power1.inOut'}, '-=.6')
+      .fromTo(w1, {opacity:0, y:14, filter:'blur(6px)'}, {opacity:1, y:0, filter:'blur(0px)', duration:.6, ease:'power2.out'}, '-=.4')
+      .fromTo(chars, {opacity:0, y:28, filter:'blur(8px)'}, {opacity:1, y:0, filter:'blur(0px)', duration:.7, ease:'power3.out', stagger:.1}, '-=.35');
+  } else {
+    tl.from(poster, {opacity:0, y:10, duration:.5, ease:'power2.out'})
+      .to(WD.b1, {strokeDashoffset:0, duration:.9, ease:'power2.inOut'}, '<')
+      .to(WD.b2, {strokeDashoffset:0, duration:.7, ease:'power2.inOut'}, '<.1')
+      .to(WD.corners, {opacity:.55, scale:1, duration:.4, ease:'back.out(1.5)', stagger:.05}, '-=.3')
+      .to(WD.sprig, {opacity:.5, y:0, duration:.4, ease:'power2.out'}, '-=.2')
+      .to(WD.ring, {strokeDashoffset:0, duration:.8, ease:'power1.inOut'}, '-=.5')
+      .fromTo(w1, {opacity:0, y:10}, {opacity:1, y:0, duration:.5, ease:'power2.out'}, '-=.4')
+      .fromTo(chars, {opacity:0, y:20}, {opacity:1, y:0, duration:.55, ease:'back.out(2)', stagger:.08}, '-=.3');
+  }
+}
+
 let tl;
 function play(){
   if (typeof gsap === 'undefined') return;
