@@ -1376,7 +1376,7 @@ $('#kakaoShare').addEventListener('click', () => {
   Kakao.Share.sendDefault({
     objectType: 'feed',
     content: {title: val('f-name') || '초대장이 도착했어요', description: [fmtDate(val('f-date')), val('f-place')].filter(Boolean).join(' · '),
-      imageUrl: `${location.origin}/og-${curTpl()}.svg`, link: {mobileWebUrl: url, webUrl: url}},
+      imageUrl: `${location.origin}/og-${curTpl()}.png`, link: {mobileWebUrl: url, webUrl: url}},
     buttons: [{title: '초대장 열기', link: {mobileWebUrl: url, webUrl: url}}]
   });
 });

@@ -64,7 +64,7 @@ module.exports = async (req, res) => {
   html = html
     .replace(/<meta property="og:title"[^>]*>/,    `<meta property="og:title" content="${esc(name)}">`)
     .replace(/<meta property="og:description"[^>]*>/, `<meta property="og:description" content="${esc(description)}">`)
-    .replace(/<meta property="og:image"[^>]*>/,     `<meta property="og:image" content="${siteUrl}/og-${esc(tpl)}.svg">`);
+    .replace(/<meta property="og:image"[^>]*>/,     `<meta property="og:image" content="${siteUrl}/og-${esc(tpl)}.png">`);
 
   res.setHeader('Content-Type', 'text/html; charset=utf-8');
   res.setHeader('Cache-Control', 'no-cache, no-store');
